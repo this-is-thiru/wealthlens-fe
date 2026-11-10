@@ -1,0 +1,109 @@
+name: CI
+
+# Runs on every PR into the long-lived branches, and on every push to them
+# (i.e. after a PR is merged). The job names below are the status checks
+# required by the branch rulesets - see docs/BRANCH_PROTECTION.md.
+# Do not rename a job without updating the rulesets.
+
+on:
+  pull_request:
+    branches: [development, staging, release]
+  push:
+    branches: [development, staging, release]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit tests
+        run: npx ng test --watch=false --browsers=ChromeHeadless
+
+  branch-policy:
+    name: branch-policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check source branch is allowed for target branch
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          # Pushes (post-merge runs) have nothing to check, but the job must
+          # still succeed so the check is green on the branch itself.
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "Not a pull request - nothing to check."
+            exit 0
+          fi
+
+          echo "PR: $HEAD -> $BASE"
+
+          name_re='^(feature|bugfix|hotfix)/[A-Z][A-Z0-9]+-[0-9]+-[a-z0-9]+(-[a-z0-9]+)*$'
+          backmerge_re='^backmerge/[a-z0-9._-]+$'
+
+          fail() {
+            echo "::error::$1"
+            echo "See docs/BRANCHING.md for the allowed flows."
+            exit 1
+          }
+
+          case "$BASE" in
+            development)
+              case "$HEAD" in
+                feature/*|bugfix/*)
+                  [[ "$HEAD" =~ $name_re ]] || fail "Branch '$HEAD' must be named <type>/<TICKET>-<short-desc>, e.g. feature/PROJ-123-add-login."
+                  ;;
+                staging) ;;  # back-merge after a hotfix
+                backmerge/*)
+                  [[ "$HEAD" =~ $backmerge_re ]] || fail "Back-merge branch '$HEAD' must look like backmerge/<short-desc>."
+                  ;;
+                *) fail "'development' only accepts PRs from feature/*, bugfix/*, staging or backmerge/* (got '$HEAD')." ;;
+              esac
+              ;;
+            staging)
+              case "$HEAD" in
+                development) ;;  # promotion
+                release) ;;      # back-merge after a hotfix
+                backmerge/*)
+                  [[ "$HEAD" =~ $backmerge_re ]] || fail "Back-merge branch '$HEAD' must look like backmerge/<short-desc>."
+                  ;;
+                *) fail "'staging' only accepts PRs from development, release or backmerge/* (got '$HEAD')." ;;
+              esac
+              ;;
+            release)
+              case "$HEAD" in
+                staging) ;;  # promotion
+                hotfix/*)
+                  [[ "$HEAD" =~ $name_re ]] || fail "Branch '$HEAD' must be named hotfix/<TICKET>-<short-desc>, e.g. hotfix/PROJ-151-login-redirect."
+                  ;;
+                *) fail "'release' only accepts PRs from staging or hotfix/* (got '$HEAD')." ;;
+              esac
+              ;;
+            *)
+              echo "Base '$BASE' has no branch policy."
+              ;;
+          esac
+
+          echo "OK"
