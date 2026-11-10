@@ -63,7 +63,9 @@ import {
   Layers,
   Users,
   Rocket,
-  HelpCircle
+  HelpCircle,
+  Sliders,
+  Table
 } from 'lucide-angular';
 
 export const LUCIDE_ICONS = {
@@ -131,5 +133,7 @@ export const LUCIDE_ICONS = {
   Layers,
   Users,
   Rocket,
-  HelpCircle
+  HelpCircle,
+  Sliders,
+  Table
 };

@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -14,13 +15,14 @@ import { PrimeNgModule } from '@core/prime-ng.module';
 describe('TempTransactionsTableComponent', () => {
   let component: TempTransactionsTableComponent;
   let fixture: ComponentFixture<TempTransactionsTableComponent>;
-  let mockTransactionService: jasmine.SpyObj<TransactionService>;
+  let mockTransactionService: MockedObject<TransactionService>;
 
   beforeEach(async () => {
-    mockTransactionService = jasmine.createSpyObj<TransactionService>(
-      'TransactionService',
-      ['getTemporaryTransactions'],
-    );
+    mockTransactionService = {
+      getTemporaryTransactions: vi
+        .fn()
+        .mockName('TransactionService.getTemporaryTransactions'),
+    } as unknown as MockedObject<TransactionService>;
 
     await TestBed.configureTestingModule({
       imports: [
@@ -46,7 +48,7 @@ describe('TempTransactionsTableComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load temporary transactions on init', (done) => {
+  it('should load temporary transactions on init', async () => {
     const data = [
       {
         id: 1,
@@ -62,14 +64,15 @@ describe('TempTransactionsTableComponent', () => {
         transactionDate: '2024-01-01',
       },
     ];
-    mockTransactionService.getTemporaryTransactions.and.returnValue(of(data as any));
+    mockTransactionService.getTemporaryTransactions.mockReturnValue(
+      of(data as any),
+    );
     component.userEmail = 'user@example.com';
 
     component.ngOnInit();
 
-    setTimeout(() => {
-      expect(component.transactions.length).toBe(1);
-      done();
-    }, 50);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(component.transactions.length).toBe(1);
   });
 });

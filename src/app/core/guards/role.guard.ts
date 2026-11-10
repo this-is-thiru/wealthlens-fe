@@ -11,7 +11,7 @@ import { UserRole, AuthModalRoute } from '@core/enums';
  * canActivate: [authGuard, roleGuard([UserRole.SUPER_USER, UserRole.ADMIN])]
  */
 export function roleGuard(allowedRoles: (UserRole | string)[]): CanActivateFn {
-  return (_route, _state) => {
+  return (_route, state) => {
     const authService = inject(AuthService);
     const router = inject(Router);
     const notificationService = inject(NotificationService);
@@ -19,7 +19,7 @@ export function roleGuard(allowedRoles: (UserRole | string)[]): CanActivateFn {
     if (!authService.isUserAuthenticated()) {
       return router.createUrlTree(
         [{ outlets: { primary: ['home'], modal: [AuthModalRoute.SIGN_IN] } }],
-        { queryParams: { returnUrl: router.url } }
+        { queryParams: { returnUrl: state.url } }
       );
     }
 

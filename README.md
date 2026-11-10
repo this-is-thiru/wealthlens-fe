@@ -18,7 +18,19 @@ Run `ng build` to build the project. The build artifacts will be stored in the `
 
 ## Running unit tests
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Unit tests run on [Vitest](https://vitest.dev) through Angular's `@angular/build:unit-test` builder, in a [happy-dom](https://github.com/capricorn86/happy-dom) environment (no browser needed).
+
+| Command | What it does |
+| --- | --- |
+| `npm test` | Run all tests once and exit |
+| `npm run test:watch` | Re-run tests on file changes |
+| `npm run test:coverage` | Run once with coverage: per-file table in the terminal, HTML report at `coverage/wealthlens/index.html` |
+
+Run a single spec with `npx ng test --watch=false --include src/app/path/to/file.spec.ts`.
+
+- Test globals (`describe`, `it`, `expect`, `vi`) are available without imports.
+- Global test setup (stubs for browser APIs the DOM environment lacks) lives in `src/test-setup.ts`.
+- To debug in VS Code, use the **ng test (debug all)** or **ng test (debug current file)** launch configurations.
 
 ## Running end-to-end tests
 

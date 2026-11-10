@@ -1,34 +1,46 @@
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import {
+  Router,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+} from '@angular/router';
 import { roleGuard, superUserGuard, adminGuard } from './role.guard';
 import { UserRole } from '@core/enums';
 import { AuthService } from '@services/auth.service';
 import { NotificationService } from '@services/notification.service';
 
 describe('RoleGuards', () => {
-  let mockAuthService: jasmine.SpyObj<AuthService>;
-  let mockRouter: jasmine.SpyObj<Router>;
-  let mockNotificationService: jasmine.SpyObj<NotificationService>;
+  let mockAuthService: MockedObject<AuthService>;
+  let mockRouter: MockedObject<Router>;
+  let mockNotificationService: MockedObject<NotificationService>;
   const dummyRoute = {} as ActivatedRouteSnapshot;
   const dummyState = { url: '/admin-test' } as RouterStateSnapshot;
 
   beforeEach(() => {
-    mockAuthService = jasmine.createSpyObj('AuthService', ['isUserAuthenticated', 'hasRole']);
-    mockRouter = jasmine.createSpyObj('Router', ['createUrlTree']);
-    mockNotificationService = jasmine.createSpyObj('NotificationService', ['addNotification']);
+    mockAuthService = {
+      isUserAuthenticated: vi.fn().mockName('AuthService.isUserAuthenticated'),
+      hasRole: vi.fn().mockName('AuthService.hasRole'),
+    } as unknown as MockedObject<AuthService>;
+    mockRouter = {
+      createUrlTree: vi.fn().mockName('Router.createUrlTree'),
+    } as unknown as MockedObject<Router>;
+    mockNotificationService = {
+      addNotification: vi.fn().mockName('NotificationService.addNotification'),
+    } as unknown as MockedObject<NotificationService>;
 
     TestBed.configureTestingModule({
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: Router, useValue: mockRouter },
         { provide: NotificationService, useValue: mockNotificationService },
-      ]
+      ],
     });
   });
 
   describe('roleGuard', () => {
     it('should redirect to sign-in modal if user is not authenticated', () => {
-      mockAuthService.isUserAuthenticated.and.returnValue(false);
+      mockAuthService.isUserAuthenticated.mockReturnValue(false);
       const guard = roleGuard([UserRole.ADMIN]);
 
       TestBed.runInInjectionContext(() => {
@@ -37,13 +49,15 @@ describe('RoleGuards', () => {
 
       expect(mockRouter.createUrlTree).toHaveBeenCalledWith(
         [{ outlets: { primary: ['home'], modal: ['sign-in'] } }],
-        { queryParams: { returnUrl: '/admin-test' } }
+        { queryParams: { returnUrl: '/admin-test' } },
       );
     });
 
     it('should allow navigation if user possesses one of the allowed roles', () => {
-      mockAuthService.isUserAuthenticated.and.returnValue(true);
-      mockAuthService.hasRole.and.callFake((role) => role === UserRole.ADMIN);
+      mockAuthService.isUserAuthenticated.mockReturnValue(true);
+      mockAuthService.hasRole.mockImplementation(
+        (role) => role === UserRole.ADMIN,
+      );
       const guard = roleGuard([UserRole.ADMIN, UserRole.SUPER_USER]);
 
       let result: any;
@@ -51,12 +65,12 @@ describe('RoleGuards', () => {
         result = guard(dummyRoute, dummyState);
       });
 
-      expect(result).toBeTrue();
+      expect(result).toBe(true);
     });
 
     it('should deny navigation, show notification, and redirect if role is missing', () => {
-      mockAuthService.isUserAuthenticated.and.returnValue(true);
-      mockAuthService.hasRole.and.returnValue(false);
+      mockAuthService.isUserAuthenticated.mockReturnValue(true);
+      mockAuthService.hasRole.mockReturnValue(false);
       const guard = roleGuard([UserRole.SUPER_USER]);
 
       TestBed.runInInjectionContext(() => {
@@ -65,25 +79,29 @@ describe('RoleGuards', () => {
 
       expect(mockNotificationService.addNotification).toHaveBeenCalledWith(
         'Access Restricted',
-        jasmine.any(String),
+        expect.any(String),
         'error',
-        null
+        null,
       );
-      expect(mockRouter.createUrlTree).toHaveBeenCalledWith(['/portfolio-analytics']);
+      expect(mockRouter.createUrlTree).toHaveBeenCalledWith([
+        '/portfolio-analytics',
+      ]);
     });
   });
 
   describe('superUserGuard', () => {
     it('should allow access when user has SUPER_USER role', () => {
-      mockAuthService.isUserAuthenticated.and.returnValue(true);
-      mockAuthService.hasRole.and.callFake((role) => role === UserRole.SUPER_USER);
+      mockAuthService.isUserAuthenticated.mockReturnValue(true);
+      mockAuthService.hasRole.mockImplementation(
+        (role) => role === UserRole.SUPER_USER,
+      );
 
       let result: any;
       TestBed.runInInjectionContext(() => {
         result = superUserGuard(dummyRoute, dummyState);
       });
 
-      expect(result).toBeTrue();
+      expect(result).toBe(true);
     });
   });
 });

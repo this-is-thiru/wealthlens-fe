@@ -6,8 +6,10 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "serve:prod": "serve -s dist/wealthlens"
+    "test": "ng test --watch=false",
+    "serve:prod": "serve -s dist/wealthlens",
+    "test:watch": "ng test",
+    "test:coverage": "ng test --watch=false --coverage"
   },
   "private": true,
   "dependencies": {
@@ -33,25 +35,21 @@
     "zone.js": "~0.16.2"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^21.2.15",
+    "@angular/build": "^21.2.15",
     "@angular/cli": "^21.2.15",
     "@angular/compiler-cli": "^21.2.17",
     "@babel/core": "^7.29.7",
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/typography": "^0.5.20",
     "@types/eslint": "^9.6.1",
-    "@types/jasmine": "~5.1.0",
-    "@types/node": "^18.18.0",
-    "jasmine-core": "~5.1.0",
-    "karma": "~6.4.0",
-    "karma-chrome-launcher": "~3.2.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.1.0",
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^4.1.12",
+    "happy-dom": "^21.0.4",
     "postcss": "^8.5.15",
     "prettier": "^3.8.4",
     "serve": "^14.2.6",
     "tailwindcss": "^4.3.1",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.12"
   }
 }
