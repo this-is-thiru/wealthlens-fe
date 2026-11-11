@@ -14,10 +14,12 @@ WORKDIR /app
 
 # Install dependencies first so this layer is cached until the lockfile changes
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+# --ignore-scripts: no dependency lifecycle scripts; native deps ship prebuilt binaries
+RUN npm ci --ignore-scripts --no-audit --no-fund
 
 COPY . .
-RUN npx ng build --configuration="${BUILD_CONFIG}" \
+# Use the project's own Angular CLI via the "build" script (npx could fetch packages on demand)
+RUN npm run build -- --configuration="${BUILD_CONFIG}" \
  && test -f "dist/${APP_NAME}/browser/index.html"
 
 # ---------------------------------------------------------------------------
@@ -28,7 +30,8 @@ FROM nginxinc/nginx-unprivileged:stable-alpine AS runtime
 ARG APP_NAME=wealthlens
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build --chown=nginx:nginx /app/dist/${APP_NAME}/browser/ /usr/share/nginx/html/
+# Owned by root (read-only for the nginx user) so the running server can't modify the site
+COPY --from=build /app/dist/${APP_NAME}/browser/ /usr/share/nginx/html/
 
 EXPOSE 8080
 
