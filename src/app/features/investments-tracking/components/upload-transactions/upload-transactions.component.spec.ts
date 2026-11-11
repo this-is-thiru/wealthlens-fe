@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -17,26 +18,30 @@ import { PrimeNgModule } from '@core/prime-ng.module';
 describe('UploadTransactionsComponent', () => {
   let component: UploadTransactionsComponent;
   let fixture: ComponentFixture<UploadTransactionsComponent>;
-  let mockTransactionService: jasmine.SpyObj<TransactionService>;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
-  let mockNotificationService: jasmine.SpyObj<NotificationService>;
+  let mockTransactionService: MockedObject<TransactionService>;
+  let mockAuthService: MockedObject<AuthService>;
+  let mockNotificationService: MockedObject<NotificationService>;
 
   beforeEach(async () => {
-    mockTransactionService = jasmine.createSpyObj<TransactionService>(
-      'TransactionService',
-      ['downloadTemplate', 'getTemporaryTransactions', 'uploadTransactions'],
-    );
-    mockTransactionService.downloadTemplate.and.returnValue(of(new Blob([''])));
-    mockTransactionService.getTemporaryTransactions.and.returnValue(of([]));
+    mockTransactionService = {
+      downloadTemplate: vi.fn().mockName('TransactionService.downloadTemplate'),
+      getTemporaryTransactions: vi
+        .fn()
+        .mockName('TransactionService.getTemporaryTransactions'),
+      uploadTransactions: vi
+        .fn()
+        .mockName('TransactionService.uploadTransactions'),
+    } as unknown as MockedObject<TransactionService>;
+    mockTransactionService.downloadTemplate.mockReturnValue(of(new Blob([''])));
+    mockTransactionService.getTemporaryTransactions.mockReturnValue(of([]));
 
-    mockAuthService = jasmine.createSpyObj<AuthService>('AuthService', [
-      'getUserEmail',
-    ]);
+    mockAuthService = {
+      getUserEmail: vi.fn().mockName('AuthService.getUserEmail'),
+    } as unknown as MockedObject<AuthService>;
 
-    mockNotificationService = jasmine.createSpyObj<NotificationService>(
-      'NotificationService',
-      ['addNotification'],
-    );
+    mockNotificationService = {
+      addNotification: vi.fn().mockName('NotificationService.addNotification'),
+    } as unknown as MockedObject<NotificationService>;
 
     await TestBed.configureTestingModule({
       imports: [
@@ -87,10 +92,24 @@ describe('UploadTransactionsComponent', () => {
     c.sheetNames = ['Jan-Mar', 'Apr-Jun', 'Notes'];
     c.buildQuarterOptions();
 
-    expect(component.quarters.map((q) => q.sheet)).toEqual(['Jan-Mar', 'Apr-Jun', 'Notes', '']);
-    expect(component.quarters.map((q) => q.disabled)).toEqual([false, false, false, true]);
-    expect(component.quarters[1].hint).toBe('Q2 (Apr – Jun) · uploads sheet 2: Apr-Jun');
-    expect(component.quarters[3].hint).toBe('Q4 (Oct – Dec) · this file has no sheet 4');
+    expect(component.quarters.map((q) => q.sheet)).toEqual([
+      'Jan-Mar',
+      'Apr-Jun',
+      'Notes',
+      '',
+    ]);
+    expect(component.quarters.map((q) => q.disabled)).toEqual([
+      false,
+      false,
+      false,
+      true,
+    ]);
+    expect(component.quarters[1].hint).toBe(
+      'Q2 (Apr – Jun) · uploads sheet 2: Apr-Jun',
+    );
+    expect(component.quarters[3].hint).toBe(
+      'Q4 (Oct – Dec) · this file has no sheet 4',
+    );
   });
 
   it('should only allow Q1 for a single-sheet workbook', () => {
@@ -98,7 +117,9 @@ describe('UploadTransactionsComponent', () => {
     c.sheetNames = ['TRANSACTIONS'];
     c.buildQuarterOptions();
 
-    expect(component.quarters.filter((q) => !q.disabled).map((q) => q.value)).toEqual(['Q1']);
+    expect(
+      component.quarters.filter((q) => !q.disabled).map((q) => q.value),
+    ).toEqual(['Q1']);
   });
 
   it('should count sheets past the 4th as ignored', () => {
@@ -146,7 +167,7 @@ describe('UploadTransactionsComponent', () => {
   });
 
   it('should parse file when a valid file is picked', () => {
-    spyOn(component, 'parseFile');
+    vi.spyOn(component, 'parseFile');
     const file = makeFile('data.xlsx', 1024);
 
     component.onFilePicked(file);
@@ -157,7 +178,7 @@ describe('UploadTransactionsComponent', () => {
   });
 
   it('should reject .csv files and not set file', () => {
-    spyOn(component, 'parseFile');
+    vi.spyOn(component, 'parseFile');
     const file = makeFile('data.csv', 1024);
 
     component.onFilePicked(file);
@@ -199,7 +220,7 @@ describe('UploadTransactionsComponent', () => {
   });
 
   it('should reject .xls files with a save-as hint', () => {
-    spyOn(component, 'parseFile');
+    vi.spyOn(component, 'parseFile');
     component.onFilePicked(makeFile('old.xls', 1024));
 
     expect(component.file).toBeNull();
@@ -208,9 +229,11 @@ describe('UploadTransactionsComponent', () => {
   });
 
   it('should block upload while temporary transactions are pending', () => {
-    mockAuthService.getUserEmail.and.returnValue('user@example.com');
-    mockTransactionService.getTemporaryTransactions.and.returnValue(of([{} as any, {} as any]));
-    spyOn(component, 'parseFile');
+    mockAuthService.getUserEmail.mockReturnValue('user@example.com');
+    mockTransactionService.getTemporaryTransactions.mockReturnValue(
+      of([{} as any, {} as any]),
+    );
+    vi.spyOn(component, 'parseFile');
 
     component.onFilePicked(makeFile('data.xlsx', 1024));
     expect(component.pendingTempCount).toBe(2);
@@ -220,7 +243,7 @@ describe('UploadTransactionsComponent', () => {
   });
 
   it('should reject files larger than 10 MB and not set file', () => {
-    spyOn(component, 'parseFile');
+    vi.spyOn(component, 'parseFile');
     const oversize = 11 * 1024 * 1024;
     const file = makeFile('big.xlsx', oversize);
 
@@ -233,7 +256,7 @@ describe('UploadTransactionsComponent', () => {
   });
 
   it('should clear file and reset states on clearFile', () => {
-    spyOn(component, 'parseFile');
+    vi.spyOn(component, 'parseFile');
     component.onFilePicked(makeFile('data.xlsx', 1024));
 
     component.clearFile();
@@ -245,7 +268,7 @@ describe('UploadTransactionsComponent', () => {
   });
 
   it('should clear fileError on dismissFileError', () => {
-    spyOn(component, 'parseFile');
+    vi.spyOn(component, 'parseFile');
     component.onFilePicked(makeFile('data.csv', 1024));
     expect(component.fileError).toBeTruthy();
 
@@ -255,12 +278,13 @@ describe('UploadTransactionsComponent', () => {
   });
 
   it('should handle drag and drop', () => {
-    spyOn(component, 'parseFile');
+    vi.spyOn(component, 'parseFile');
     const file = makeFile('drop.xlsx', 1024);
-    const event = new DragEvent('drop', {
-      dataTransfer: new DataTransfer(),
-    });
-    event.dataTransfer!.items.add(file);
+    // jsdom has no DragEvent/DataTransfer, so hand the handler a minimal stand-in.
+    const event = {
+      preventDefault: vi.fn(),
+      dataTransfer: { files: [file] },
+    } as unknown as DragEvent;
 
     component.handleDrop(event);
 
@@ -270,10 +294,13 @@ describe('UploadTransactionsComponent', () => {
 });
 
 describe('TransactionService.interpretUploadResponse', () => {
-  const interpret = (body: unknown) => TransactionService.prototype.interpretUploadResponse.call(null, body);
+  const interpret = (body: unknown) =>
+    TransactionService.prototype.interpretUploadResponse.call(null, body);
 
   it('treats row errors as nothing uploaded, even though the server answers 200', () => {
-    const r = interpret('No transaction uploaded. Errors: [Invalid number of columns in row: 2, headers count: 14, actual count: 12]');
+    const r = interpret(
+      'No transaction uploaded. Errors: [Invalid number of columns in row: 2, headers count: 14, actual count: 12]',
+    );
     expect(r.tone).toBe('error');
     expect(r.details.length).toBeGreaterThan(0);
   });
@@ -285,25 +312,44 @@ describe('TransactionService.interpretUploadResponse', () => {
   });
 
   it('treats any other message as full success', () => {
-    expect(interpret('All transactions uploaded successfully from: x.xlsx, quarter: Q1').tone).toBe('success');
+    expect(
+      interpret(
+        'All transactions uploaded successfully from: x.xlsx, quarter: Q1',
+      ).tone,
+    ).toBe('success');
   });
 });
 
 describe('TransactionService.classifyUploadError', () => {
-  const service = Object.create(TransactionService.prototype) as TransactionService;
-  const wrapped = (message: string) => ({ status: 400, error: { data: { status: 400, message } } });
+  const service = Object.create(
+    TransactionService.prototype,
+  ) as TransactionService;
+  const wrapped = (message: string) => ({
+    status: 400,
+    error: { data: { status: 400, message } },
+  });
 
   it('reads the message from the { data } wrapper and explains an empty enum cell', () => {
-    const r = service.classifyUploadError(wrapped('No enum constant com.thiru.wealthlens.portfolio.dto.enums.BrokerName.'));
+    const r = service.classifyUploadError(
+      wrapped(
+        'No enum constant com.thiru.wealthlens.portfolio.dto.enums.BrokerName.',
+      ),
+    );
     expect(r.message).toContain('empty BROKER NAME');
   });
 
   it('explains a misspelled enum value', () => {
-    const r = service.classifyUploadError(wrapped('No enum constant com.thiru.wealthlens.portfolio.dto.enums.AssetType.Equity'));
+    const r = service.classifyUploadError(
+      wrapped(
+        'No enum constant com.thiru.wealthlens.portfolio.dto.enums.AssetType.Equity',
+      ),
+    );
     expect(r.message).toContain('ASSET TYPE "Equity"');
   });
 
   it('passes other server messages through', () => {
-    expect(service.classifyUploadError(wrapped('Invalid quarter: Q5')).message).toBe('Invalid quarter: Q5');
+    expect(
+      service.classifyUploadError(wrapped('Invalid quarter: Q5')).message,
+    ).toBe('Invalid quarter: Q5');
   });
 });

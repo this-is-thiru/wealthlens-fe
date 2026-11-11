@@ -36,7 +36,7 @@ describe('TempCorporateTabsComponent', () => {
   });
 
   it('should emit dataChanged when action applied', () => {
-    spyOn(component.dataChanged, 'emit');
+    vi.spyOn(component.dataChanged, 'emit');
     component.onActionApplied();
     expect(component.dataChanged.emit).toHaveBeenCalled();
   });

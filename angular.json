@@ -21,19 +21,27 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:application",
+          "builder": "@angular/build:application",
           "options": {
             "outputPath": "dist/wealthlens",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
-            "assets": ["src/assets"],
-            "styles": ["src/styles.scss"],
+            "assets": [
+              "src/assets"
+            ],
+            "styles": [
+              "src/styles.scss"
+            ],
             "scripts": [],
             "stylePreprocessorOptions": {
               "sass": {
-                "silenceDeprecations": ["import"]
+                "silenceDeprecations": [
+                  "import"
+                ]
               }
             }
           },
@@ -94,7 +102,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
               "buildTarget": "wealthlens:build:production"
@@ -112,21 +120,54 @@
           "defaultConfiguration": "development"
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "builder": "@angular/build:extract-i18n",
           "options": {
             "buildTarget": "wealthlens:build"
           }
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
+          "builder": "@angular/build:unit-test",
           "options": {
-            "polyfills": ["zone.js", "zone.js/testing"],
-            "tsConfig": "tsconfig.spec.json",
-            "assets": ["src/favicon.ico", "src/assets"],
-            "styles": [
-              "src/styles.scss"
+            "setupFiles": [
+              "src/test-setup.ts"
             ],
-            "scripts": []
+            "coverageExclude": [
+              "**/*.html"
+            ],
+            "coverageReporters": [
+              [
+                "text",
+                {
+                  "maxCols": 200
+                }
+              ],
+              "text-summary",
+              "html",
+              "lcov"
+            ]
+          },
+          "configurations": {
+            "ci": {
+              "watch": false,
+              "coverage": true,
+              "coverageReporters": [
+                [
+                  "text",
+                  {
+                    "maxCols": 200
+                  }
+                ],
+                "html",
+                "lcov",
+                "json-summary"
+              ],
+              "coverageThresholds": {
+                "lines": 20,
+                "functions": 20,
+                "branches": 20,
+                "statements": 20
+              }
+            }
           }
         }
       }

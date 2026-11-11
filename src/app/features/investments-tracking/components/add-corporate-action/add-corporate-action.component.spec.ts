@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -14,15 +15,19 @@ import { PrimeNgModule } from '@core/prime-ng.module';
 describe('AddCorporateActionComponent', () => {
   let component: AddCorporateActionComponent;
   let fixture: ComponentFixture<AddCorporateActionComponent>;
-  let mockCorporateActionService: jasmine.SpyObj<CorporateActionService>;
+  let mockCorporateActionService: MockedObject<CorporateActionService>;
 
   beforeEach(async () => {
-    mockCorporateActionService = jasmine.createSpyObj<CorporateActionService>(
-      'CorporateActionService',
-      ['addCorporateAction', 'getAllCorporateActions'],
-    );
-    mockCorporateActionService.addCorporateAction.and.returnValue(of('ok'));
-    mockCorporateActionService.getAllCorporateActions.and.returnValue(of([]));
+    mockCorporateActionService = {
+      addCorporateAction: vi
+        .fn()
+        .mockName('CorporateActionService.addCorporateAction'),
+      getAllCorporateActions: vi
+        .fn()
+        .mockName('CorporateActionService.getAllCorporateActions'),
+    } as unknown as MockedObject<CorporateActionService>;
+    mockCorporateActionService.addCorporateAction.mockReturnValue(of('ok'));
+    mockCorporateActionService.getAllCorporateActions.mockReturnValue(of([]));
 
     await TestBed.configureTestingModule({
       imports: [
@@ -34,7 +39,10 @@ describe('AddCorporateActionComponent', () => {
         PrimeNgModule,
       ],
       providers: [
-        { provide: CorporateActionService, useValue: mockCorporateActionService },
+        {
+          provide: CorporateActionService,
+          useValue: mockCorporateActionService,
+        },
         MessageService,
       ],
       schemas: [NO_ERRORS_SCHEMA],
@@ -58,11 +66,13 @@ describe('AddCorporateActionComponent', () => {
   it('should validate required fields before submitting', () => {
     component.stockCode = '';
     component.submitForm();
-    expect(mockCorporateActionService.addCorporateAction).not.toHaveBeenCalled();
+    expect(
+      mockCorporateActionService.addCorporateAction,
+    ).not.toHaveBeenCalled();
   });
 
-  it('should call addCorporateAction API with correct payload on submit', (done) => {
-    spyOn(component.actionAdded, 'emit');
+  it('should call addCorporateAction API with correct payload on submit', async () => {
+    vi.spyOn(component.actionAdded, 'emit');
     component.stockCode = 'RELIANCE';
     component.stockName = 'Reliance Industries Ltd';
     component.type = 'BONUS';
@@ -71,22 +81,23 @@ describe('AddCorporateActionComponent', () => {
 
     component.submitForm();
 
-    setTimeout(() => {
-      expect(mockCorporateActionService.addCorporateAction).toHaveBeenCalledWith({
-        stockCode: 'RELIANCE',
-        stockName: 'Reliance Industries Ltd',
-        type: 'BONUS',
-        assetType: 'EQUITY',
-        description: '',
-        priority: 0,
-        exDate: '2026-05-28',
-        recordDate: '2026-05-28',
-        date: '2026-05-28',
-        ratio: '1:1',
-      });
-      expect(component.actionAdded.emit).toHaveBeenCalled();
-      done();
-    }, 50);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(
+      mockCorporateActionService.addCorporateAction,
+    ).toHaveBeenCalledWith({
+      stockCode: 'RELIANCE',
+      stockName: 'Reliance Industries Ltd',
+      type: 'BONUS',
+      assetType: 'EQUITY',
+      description: '',
+      priority: 0,
+      exDate: '2026-05-28',
+      recordDate: '2026-05-28',
+      date: '2026-05-28',
+      ratio: '1:1',
+    });
+    expect(component.actionAdded.emit).toHaveBeenCalled();
   });
 
   it('should reject a malformed ratio', () => {
@@ -98,7 +109,9 @@ describe('AddCorporateActionComponent', () => {
 
     component.submitForm();
 
-    expect(mockCorporateActionService.addCorporateAction).not.toHaveBeenCalled();
+    expect(
+      mockCorporateActionService.addCorporateAction,
+    ).not.toHaveBeenCalled();
     expect(component.validationError).toContain('ratio');
   });
 
@@ -111,7 +124,9 @@ describe('AddCorporateActionComponent', () => {
 
     component.submitForm();
 
-    expect(mockCorporateActionService.addCorporateAction).not.toHaveBeenCalled();
+    expect(
+      mockCorporateActionService.addCorporateAction,
+    ).not.toHaveBeenCalled();
   });
 
   it('should open a resulting-company row when switching to demerger', () => {
