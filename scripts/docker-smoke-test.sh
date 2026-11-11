@@ -37,7 +37,13 @@ for _ in $(seq 1 30); do
 done
 
 echo "Container"
-if [ "$status" = "healthy" ]; then pass "HEALTHCHECK reports healthy"; else fail "health status is '${status}'"; fi
+if [ "$status" = "healthy" ]; then
+  pass "HEALTHCHECK reports healthy"
+else
+  fail "health status is '${status}' (running: $(docker inspect -f '{{.State.Running}}' "$NAME"))"
+  echo "Smoke test FAILED: container never became healthy, skipping remaining checks"
+  exit 1
+fi
 
 uid="$(docker exec "$NAME" id -u)"
 if [ "$uid" != "0" ]; then pass "runs as non-root (uid ${uid})"; else fail "runs as root"; fi
