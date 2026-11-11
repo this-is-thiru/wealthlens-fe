@@ -7,7 +7,7 @@
 set -euo pipefail
 
 IMAGE="${1:?usage: $0 <image> [host-port]}"
-PORT="${2:-8080}"
+PORT="${2:-4200}" # host port; the container always listens on 8080
 NAME="wealthlens-smoke-$$"
 BASE="http://127.0.0.1:${PORT}"
 failures=0
