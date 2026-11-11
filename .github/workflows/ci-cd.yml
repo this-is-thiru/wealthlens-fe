@@ -149,18 +149,39 @@ jobs:
           labels: |
             org.opencontainers.image.title=${{ env.APP_NAME }}
 
-      - name: Build (and push on branch pushes)
+      # Build once and load it into the runner's Docker so it can be tested before any push.
+      - name: Build image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
-          push: ${{ github.event_name == 'push' }}
+          load: true
+          push: false
+          build-args: |
+            APP_NAME=${{ env.APP_NAME }}
+            BUILD_CONFIG=${{ steps.cfg.outputs.build_config }}
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ${{ env.APP_NAME }}:ci
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test image
+        run: bash scripts/docker-smoke-test.sh "${{ env.APP_NAME }}:ci"
+
+      # Same inputs as "Build image", so every layer comes from the cache.
+      - name: Push image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
           build-args: |
             APP_NAME=${{ env.APP_NAME }}
             BUILD_CONFIG=${{ steps.cfg.outputs.build_config }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Image summary
         run: |

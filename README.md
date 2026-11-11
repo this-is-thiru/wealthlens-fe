@@ -55,6 +55,12 @@ docker build --build-arg BUILD_CONFIG=staging -t wealthlens:staging .
 
 Check health with `docker ps` (STATUS shows `healthy`) or `curl http://localhost:8080/healthz`.
 
+Run the same smoke test CI runs (health, non-root, read-only files, SPA routing, 404 for missing chunks, security and cache headers):
+
+```bash
+bash scripts/docker-smoke-test.sh wealthlens:local   # or any image tag; optional 2nd arg = host port
+```
+
 ### Pull from GitHub Container Registry
 
 CI publishes to `ghcr.io/this-is-thiru/wealthlens-fe`:
@@ -87,8 +93,8 @@ While the package is private, log in first: `echo <PAT with read:packages> | doc
 
 | Event | Behaviour |
 | --- | --- |
-| Pull request | Builds the image to prove it builds; nothing is pushed |
-| Push | Logs in to ghcr.io with `GITHUB_TOKEN` and pushes |
+| Pull request | Builds the image and smoke-tests it; nothing is pushed |
+| Push | Builds and smoke-tests, then logs in to ghcr.io with `GITHUB_TOKEN` and pushes (only if the smoke test passed) |
 
 - **Build config:** `production` for `release` (and PRs into `release`), `development` otherwise.
 - **Tags:** `<branch>`, `<branch>-<short sha>`, plus `latest` for `release` pushes only.
