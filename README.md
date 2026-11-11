@@ -45,12 +45,12 @@ The image is a multi-stage build: `node:22-alpine` compiles the app, and `nginxi
 ### Build and run locally
 
 ```bash
-docker build -t wealthlens .
-docker run --rm -p 4200:8080 wealthlens   # host 4200 -> container 8080 (8080 on the host is the backend)
-# open http://localhost:4200
+docker build -t wealthlens-fe .
+docker run -d --name wealthlens-fe -p 4200:8080 wealthlens-fe   # host 4200 -> container 8080 (8080 on the host is the backend)
+# open http://localhost:4200 ; stop with: docker rm -f wealthlens-fe
 
 # another Angular configuration
-docker build --build-arg BUILD_CONFIG=staging -t wealthlens:staging .
+docker build --build-arg BUILD_CONFIG=staging -t wealthlens-fe:staging .
 ```
 
 Check health with `docker ps` (STATUS shows `healthy`) or `curl http://localhost:4200/healthz`.
@@ -58,7 +58,7 @@ Check health with `docker ps` (STATUS shows `healthy`) or `curl http://localhost
 Run the same smoke test CI runs (health, non-root, read-only files, SPA routing, 404 for missing chunks, security and cache headers):
 
 ```bash
-bash scripts/docker-smoke-test.sh wealthlens:local   # or any image tag; optional 2nd arg = host port, default 4200
+bash scripts/docker-smoke-test.sh wealthlens-fe   # or any image tag; optional 2nd arg = host port, default 4200
 ```
 
 ### Pull from GitHub Container Registry
@@ -69,7 +69,7 @@ CI publishes to `ghcr.io/this-is-thiru/wealthlens-fe`:
 docker pull ghcr.io/this-is-thiru/wealthlens-fe:latest          # latest release
 docker pull ghcr.io/this-is-thiru/wealthlens-fe:staging         # tip of a branch
 docker pull ghcr.io/this-is-thiru/wealthlens-fe:release-1a2b3c4 # exact commit
-docker run --rm -p 4200:8080 ghcr.io/this-is-thiru/wealthlens-fe:latest
+docker run -d --name wealthlens-fe -p 4200:8080 ghcr.io/this-is-thiru/wealthlens-fe:latest
 ```
 
 While the package is private, log in first: `echo <PAT with read:packages> | docker login ghcr.io -u <github-user> --password-stdin`.
