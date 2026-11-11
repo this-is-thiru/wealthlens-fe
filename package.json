@@ -9,7 +9,8 @@
     "test": "ng test --watch=false",
     "serve:prod": "serve -s dist/wealthlens",
     "test:watch": "ng test",
-    "test:coverage": "ng test --watch=false --coverage"
+    "test:coverage": "ng test --watch=false --coverage",
+    "test:ci": "ng test --configuration=ci"
   },
   "private": true,
   "dependencies": {

@@ -26,14 +26,22 @@
             "outputPath": "dist/wealthlens",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
-            "assets": ["src/assets"],
-            "styles": ["src/styles.scss"],
+            "assets": [
+              "src/assets"
+            ],
+            "styles": [
+              "src/styles.scss"
+            ],
             "scripts": [],
             "stylePreprocessorOptions": {
               "sass": {
-                "silenceDeprecations": ["import"]
+                "silenceDeprecations": [
+                  "import"
+                ]
               }
             }
           },
@@ -120,9 +128,46 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "setupFiles": ["src/test-setup.ts"],
-            "coverageExclude": ["**/*.html"],
-            "coverageReporters": [["text", { "maxCols": 200 }], "text-summary", "html", "lcov"]
+            "setupFiles": [
+              "src/test-setup.ts"
+            ],
+            "coverageExclude": [
+              "**/*.html"
+            ],
+            "coverageReporters": [
+              [
+                "text",
+                {
+                  "maxCols": 200
+                }
+              ],
+              "text-summary",
+              "html",
+              "lcov"
+            ]
+          },
+          "configurations": {
+            "ci": {
+              "watch": false,
+              "coverage": true,
+              "coverageReporters": [
+                [
+                  "text",
+                  {
+                    "maxCols": 200
+                  }
+                ],
+                "html",
+                "lcov",
+                "json-summary"
+              ],
+              "coverageThresholds": {
+                "lines": 20,
+                "functions": 20,
+                "branches": 20,
+                "statements": 20
+              }
+            }
           }
         }
       }
