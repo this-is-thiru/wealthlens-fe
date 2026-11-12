@@ -174,7 +174,7 @@ export class TransactionService {
   } {
     const text = typeof body === 'string' ? body : '';
     const listItems = (s: string): string[] => {
-      const inner = s.match(/\[(.*)\]\s*$/s)?.[1] ?? '';
+      const inner = s.match(/\[[^\]]*]\s*$/)?.[1] ?? '';
       return inner.split(',').map((x) => x.trim()).filter(Boolean);
     };
 

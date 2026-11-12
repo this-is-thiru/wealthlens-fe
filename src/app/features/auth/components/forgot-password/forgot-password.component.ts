@@ -18,14 +18,14 @@ export class ForgotPasswordComponent {
   private router = inject(Router);
 
   onClose(): void {
-    this.router.navigate([{ outlets: { modal: null } }]);
+    void this.router.navigate([{ outlets: { modal: null } }]);
   }
 
   goToSignIn(): void {
-    this.router.navigate([{ outlets: { modal: [AuthModalRoute.SIGN_IN] } }]);
+    void this.router.navigate([{ outlets: { modal: [AuthModalRoute.SIGN_IN] } }]);
   }
 
   goToSignUp(): void {
-    this.router.navigate([{ outlets: { modal: [AuthModalRoute.SIGN_UP] } }]);
+    void this.router.navigate([{ outlets: { modal: [AuthModalRoute.SIGN_UP] } }]);
   }
 }

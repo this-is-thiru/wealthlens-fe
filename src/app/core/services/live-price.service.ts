@@ -121,9 +121,9 @@ export class LivePriceService {
 
       // Extract symbol and price
       const symbol = cells[symbolIdx]?.toUpperCase() || '';
-      const priceVal = parseFloat(cells[priceIdx]?.replace(/[^0-9.-]/g, '') || '');
+      const priceVal = Number.parseFloat(cells[priceIdx]?.replace(/[^0-9.-]/g, '') || '');
 
-      if (symbol && !isNaN(priceVal)) {
+      if (symbol && !Number.isNaN(priceVal)) {
         priceMap.set(symbol, priceVal);
       }
     }

@@ -196,11 +196,11 @@ export class PortfolioStocksComponent implements OnInit {
         
         this.availableAssetTypes = Array.from(
           new Set(this.holdings.map((h) => h.assetType).filter(Boolean))
-        ).sort();
+        ).sort((a, b) => a.localeCompare(b));
 
         this.availableBrokers = Array.from(
           new Set(this.holdings.map((h) => h.brokerName).filter(Boolean) as string[])
-        ).sort();
+        ).sort((a, b) => a.localeCompare(b));
         this.applyFilters();
         this.holdingsLoaded.emit(this.holdings.length);
 

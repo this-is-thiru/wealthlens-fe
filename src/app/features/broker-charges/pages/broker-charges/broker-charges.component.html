@@ -148,7 +148,7 @@
 
                 <!-- Buy / Sell Action -->
                 <div>
-                  <label class="block text-2xs font-semibold text-text-secondary uppercase mb-1.5">Trade Action</label>
+                  <label id="sim-trade-action-label" class="block text-2xs font-semibold text-text-secondary uppercase mb-1.5">Trade Action</label>
                   <div class="grid grid-cols-2 gap-2">
                     <button type="button" (click)="simEvent.set('BUY'); runSimulation()"
                             [ngClass]="simEvent() === 'BUY' ? 'bg-success text-white font-semibold' : 'bg-surface text-text-secondary hover:text-white border border-border'"
@@ -166,8 +166,8 @@
                 <!-- Broker & Asset Type -->
                 <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Broker</label>
-                    <select [(ngModel)]="simBroker" (change)="runSimulation()"
+                    <label for="sim-broker" class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Broker</label>
+                    <select id="sim-broker" [(ngModel)]="simBroker" (change)="runSimulation()"
                             class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent">
                       <option value="ZERODHA">Zerodha</option>
                       <option value="UPSTOX">Upstox</option>
@@ -175,8 +175,8 @@
                     </select>
                   </div>
                   <div>
-                    <label class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Asset Class</label>
-                    <select [(ngModel)]="simAssetType" (change)="runSimulation()"
+                    <label for="sim-asset-type" class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Asset Class</label>
+                    <select id="sim-asset-type" [(ngModel)]="simAssetType" (change)="runSimulation()"
                             class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent">
                       <option value="EQUITY">Equity Share</option>
                       <option value="MUTUAL_FUND">Mutual Fund</option>
@@ -187,16 +187,16 @@
                 <!-- Segment & Exchange -->
                 <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Segment</label>
-                    <select [(ngModel)]="simSegment" (change)="runSimulation()"
+                    <label for="sim-segment" class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Segment</label>
+                    <select id="sim-segment" [(ngModel)]="simSegment" (change)="runSimulation()"
                             class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent">
                       <option value="DELIVERY">Delivery (CNC)</option>
                       <option value="INTRADAY">Intraday (MIS)</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Exchange</label>
-                    <select [(ngModel)]="simExchange" (change)="runSimulation()"
+                    <label for="sim-exchange" class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Exchange</label>
+                    <select id="sim-exchange" [(ngModel)]="simExchange" (change)="runSimulation()"
                             class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent">
                       <option value="NSE">NSE</option>
                       <option value="BSE">BSE</option>
@@ -206,21 +206,21 @@
 
                 <!-- Stock Symbol -->
                 <div>
-                  <label class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Symbol / Scrip</label>
-                  <input type="text" [(ngModel)]="simStockCode" (blur)="runSimulation()" placeholder="e.g. RELIANCE, TCS"
+                  <label for="sim-stock-code" class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Symbol / Scrip</label>
+                  <input id="sim-stock-code" type="text" [(ngModel)]="simStockCode" (blur)="runSimulation()" placeholder="e.g. RELIANCE, TCS"
                          class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white uppercase focus:outline-none focus:border-accent font-mono" />
                 </div>
 
                 <!-- Quantity & Price -->
                 <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Quantity</label>
-                    <input type="number" min="1" [(ngModel)]="simQuantity" (input)="runSimulation()"
+                    <label for="sim-quantity" class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Quantity</label>
+                    <input id="sim-quantity" type="number" min="1" [(ngModel)]="simQuantity" (input)="runSimulation()"
                            class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent font-mono" />
                   </div>
                   <div>
-                    <label class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Price / Share (₹)</label>
-                    <input type="number" min="0.01" step="0.05" [(ngModel)]="simPrice" (input)="runSimulation()"
+                    <label for="sim-price" class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Price / Share (₹)</label>
+                    <input id="sim-price" type="number" min="0.01" step="0.05" [(ngModel)]="simPrice" (input)="runSimulation()"
                            class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent font-mono" />
                   </div>
                 </div>

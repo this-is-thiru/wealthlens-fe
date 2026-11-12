@@ -73,9 +73,9 @@ export class SignInComponent implements OnInit {
           this.notificationService.addNotification('Login Success', 'Signed in successfully', 'success');
           const returnUrl = this.getReturnUrl();
           if (returnUrl) {
-            this.router.navigateByUrl(returnUrl);
+            void this.router.navigateByUrl(returnUrl);
           } else {
-            this.router.navigate([{ outlets: { primary: ['home'], modal: null } }]);
+            void this.router.navigate([{ outlets: { primary: ['home'], modal: null } }]);
           }
         },
         error: (err) => {
@@ -102,7 +102,7 @@ export class SignInComponent implements OnInit {
 
   onClose(): void {
     // Close only the modal outlet, not the entire route
-    this.router.navigate([{ outlets: { modal: null } }], {
+    void this.router.navigate([{ outlets: { modal: null } }], {
       relativeTo: this.router.routerState.root,
       queryParams: { returnUrl: null },
       queryParamsHandling: 'merge',
@@ -111,7 +111,7 @@ export class SignInComponent implements OnInit {
 
   onForgotPassword(): void {
     // Navigate to the forgot password modal
-    this.router.navigate([{ outlets: { modal: [AuthModalRoute.FORGOT_PASSWORD] } }]);
+    void this.router.navigate([{ outlets: { modal: [AuthModalRoute.FORGOT_PASSWORD] } }]);
   }
 
   // Only allow in-app paths, never protocol-relative or absolute URLs

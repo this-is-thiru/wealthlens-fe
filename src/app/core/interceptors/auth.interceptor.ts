@@ -68,7 +68,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
         );
 
         // Redirect to sign-in modal remembering returnUrl
-        router.navigate([{ outlets: { primary: ['home'], modal: [AuthModalRoute.SIGN_IN] } }], {
+        void router.navigate([{ outlets: { primary: ['home'], modal: [AuthModalRoute.SIGN_IN] } }], {
           queryParams: { returnUrl: currentUrl },
         });
       } else if (error.status === 403) {
