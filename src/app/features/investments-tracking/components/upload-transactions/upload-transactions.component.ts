@@ -177,7 +177,7 @@ export class UploadTransactionsComponent implements OnDestroy {
     const q = name.match(/(?<![a-z])q(?:uarter|tr)?[\s_.-]*([1-4])(?!\d)/);
     if (q) return `Q${q[1]}`;
 
-    const range = name.match(/\b(jan|apr|jul|oct)[a-z]*[\s_.-]*(?:to|-|–)?[\s_.-]*(mar|jun|sep|dec)/);
+    const range = name.match(/\b(jan|apr|jul|oct)[a-z]{0,8}[_. -]{0,4}(?:to|-|–)?[_. -]{0,4}(mar|jun|sep|dec)/i);
     if (range) {
       const starts = ['jan', 'apr', 'jul', 'oct'];
       const ends = ['mar', 'jun', 'sep', 'dec'];
@@ -375,7 +375,7 @@ export class UploadTransactionsComponent implements OnDestroy {
 
     // Text dates like "15-Jan-2026" or "Jan 15, 2026": read local fields, not UTC.
     const date = new Date(str.replace(/-/g, ' '));
-    if (isNaN(date.getTime())) return str;
+    if (Number.isNaN(date.getTime())) return str;
     return this.formatYmd(date.getFullYear(), date.getMonth() + 1, date.getDate());
   }
 
@@ -412,7 +412,7 @@ export class UploadTransactionsComponent implements OnDestroy {
   }
 
   isNumber(val: any): boolean {
-    return typeof val === 'number' && !isNaN(val);
+    return typeof val === 'number' && !Number.isNaN(val);
   }
 
   parseFile(file: File): void {

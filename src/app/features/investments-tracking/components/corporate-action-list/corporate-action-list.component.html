@@ -146,25 +146,25 @@
         paginatorDropdownAppendTo="body" [tableStyle]="{ 'min-width': '56rem' }" responsiveLayout="scroll" styleClass="p-datatable-sm w-full">
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="stockName">
+            <th scope="col" pSortableColumn="stockName">
               <div class="flex items-center gap-1 whitespace-nowrap">Stock <p-sortIcon field="stockName"></p-sortIcon></div>
             </th>
-            <th pSortableColumn="type">
+            <th scope="col" pSortableColumn="type">
               <div class="flex items-center gap-1 whitespace-nowrap">Type <p-sortIcon field="type"></p-sortIcon></div>
             </th>
-            <th>
+            <th scope="col">
               <div class="flex items-center whitespace-nowrap">Terms</div>
             </th>
-            <th pSortableColumn="priority" class="text-center">
+            <th scope="col" pSortableColumn="priority" class="text-center">
               <div class="flex items-center justify-center gap-1 whitespace-nowrap">Priority <p-sortIcon field="priority"></p-sortIcon></div>
             </th>
-            <th pSortableColumn="exDate">
+            <th scope="col" pSortableColumn="exDate">
               <div class="flex items-center gap-1 whitespace-nowrap">Ex-date <p-sortIcon field="exDate"></p-sortIcon></div>
             </th>
-            <th pSortableColumn="recordDate">
+            <th scope="col" pSortableColumn="recordDate">
               <div class="flex items-center gap-1 whitespace-nowrap">Record date <p-sortIcon field="recordDate"></p-sortIcon></div>
             </th>
-            <th class="text-right">
+            <th scope="col" class="text-right">
               <div class="flex items-center justify-end whitespace-nowrap">Actions</div>
             </th>
           </tr>

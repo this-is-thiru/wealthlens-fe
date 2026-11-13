@@ -416,7 +416,7 @@ export class PortfolioAnalyticsComponent implements OnInit {
     // Filter holdings tab
     this.availableAssetTypes = Array.from(
       new Set(this.holdings.map((h) => h.assetType).filter(Boolean))
-    ).sort();
+    ).sort((a, b) => a.localeCompare(b));
     this.applyHoldingsFilters();
   }
 

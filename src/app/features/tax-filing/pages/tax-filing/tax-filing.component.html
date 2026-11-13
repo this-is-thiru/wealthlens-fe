@@ -251,31 +251,31 @@
               styleClass="p-datatable-sm w-full" [rowHover]="true">
               <ng-template pTemplate="header">
                 <tr>
-                  <th pSortableColumn="stockName" class="text-left cursor-pointer whitespace-nowrap">
+                  <th scope="col" pSortableColumn="stockName" class="text-left cursor-pointer whitespace-nowrap">
                     <div class="flex items-center gap-1 whitespace-nowrap">Stock <p-sortIcon
                         field="stockName"></p-sortIcon></div>
                   </th>
-                  <th pSortableColumn="sellQty" class="text-right cursor-pointer whitespace-nowrap">
+                  <th scope="col" pSortableColumn="sellQty" class="text-right cursor-pointer whitespace-nowrap">
                     <div class="flex items-center justify-end gap-1 whitespace-nowrap">Sell Qty <p-sortIcon
                         field="sellQty"></p-sortIcon></div>
                   </th>
-                  <th pSortableColumn="costBasis" class="text-right cursor-pointer whitespace-nowrap">
+                  <th scope="col" pSortableColumn="costBasis" class="text-right cursor-pointer whitespace-nowrap">
                     <div class="flex items-center justify-end gap-1 whitespace-nowrap">Cost Basis <p-sortIcon
                         field="costBasis"></p-sortIcon></div>
                   </th>
-                  <th pSortableColumn="sellValue" class="text-right cursor-pointer whitespace-nowrap">
+                  <th scope="col" pSortableColumn="sellValue" class="text-right cursor-pointer whitespace-nowrap">
                     <div class="flex items-center justify-end gap-1 whitespace-nowrap">Sell Value <p-sortIcon
                         field="sellValue"></p-sortIcon></div>
                   </th>
-                  <th pSortableColumn="gain" class="text-right cursor-pointer whitespace-nowrap">
+                  <th scope="col" pSortableColumn="gain" class="text-right cursor-pointer whitespace-nowrap">
                     <div class="flex items-center justify-end gap-1 whitespace-nowrap">Realized P&amp;L <p-sortIcon
                         field="gain"></p-sortIcon></div>
                   </th>
-                  <th pSortableColumn="period" class="text-left cursor-pointer whitespace-nowrap">
+                  <th scope="col" pSortableColumn="period" class="text-left cursor-pointer whitespace-nowrap">
                     <div class="flex items-center gap-1 whitespace-nowrap">Period <p-sortIcon
                         field="period"></p-sortIcon></div>
                   </th>
-                  <th pSortableColumn="percentOfTotalGain" class="text-right cursor-pointer whitespace-nowrap">
+                  <th scope="col" pSortableColumn="percentOfTotalGain" class="text-right cursor-pointer whitespace-nowrap">
                     <div class="flex items-center justify-end gap-1 whitespace-nowrap">% Total <p-sortIcon
                         field="percentOfTotalGain"></p-sortIcon></div>
                   </th>
@@ -368,13 +368,13 @@
             <p-table [value]="accrualRows" styleClass="p-datatable-sm w-full" [tableStyle]="{ 'min-width': '64rem' }">
               <ng-template pTemplate="header">
                 <tr>
-                  <th class="text-left whitespace-nowrap min-w-[12rem] sm:min-w-[20rem]">Computation / Category</th>
-                  <th class="text-right whitespace-nowrap">Upto 15/6</th>
-                  <th class="text-right whitespace-nowrap">16/6 to 15/9</th>
-                  <th class="text-right whitespace-nowrap">16/9 to 15/12</th>
-                  <th class="text-right whitespace-nowrap">16/12 to 15/3</th>
-                  <th class="text-right whitespace-nowrap">16/3 to 31/3</th>
-                  <th class="text-right whitespace-nowrap">Total</th>
+                  <th scope="col" class="text-left whitespace-nowrap min-w-[12rem] sm:min-w-[20rem]">Computation / Category</th>
+                  <th scope="col" class="text-right whitespace-nowrap">Upto 15/6</th>
+                  <th scope="col" class="text-right whitespace-nowrap">16/6 to 15/9</th>
+                  <th scope="col" class="text-right whitespace-nowrap">16/9 to 15/12</th>
+                  <th scope="col" class="text-right whitespace-nowrap">16/12 to 15/3</th>
+                  <th scope="col" class="text-right whitespace-nowrap">16/3 to 31/3</th>
+                  <th scope="col" class="text-right whitespace-nowrap">Total</th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-row>
@@ -528,13 +528,13 @@
               [tableStyle]="{ 'min-width': '60rem' }">
               <ng-template pTemplate="header">
                 <tr>
-                  <th class="text-left whitespace-nowrap">Stock</th>
-                  <th class="text-right whitespace-nowrap">Qty</th>
-                  <th class="text-right whitespace-nowrap">Avg Cost</th>
-                  <th class="text-right whitespace-nowrap">Market Price</th>
-                  <th class="text-right whitespace-nowrap">Unrealized Loss</th>
-                  <th class="text-center whitespace-nowrap">Term</th>
-                  <th class="text-right whitespace-nowrap text-success">Est. Tax Saved</th>
+                  <th scope="col" class="text-left whitespace-nowrap">Stock</th>
+                  <th scope="col" class="text-right whitespace-nowrap">Qty</th>
+                  <th scope="col" class="text-right whitespace-nowrap">Avg Cost</th>
+                  <th scope="col" class="text-right whitespace-nowrap">Market Price</th>
+                  <th scope="col" class="text-right whitespace-nowrap">Unrealized Loss</th>
+                  <th scope="col" class="text-center whitespace-nowrap">Term</th>
+                  <th scope="col" class="text-right whitespace-nowrap text-success">Est. Tax Saved</th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-op>

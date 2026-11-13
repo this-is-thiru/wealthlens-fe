@@ -456,8 +456,8 @@ export class PortfolioAnalyticsService {
     if (!isoDate || typeof isoDate !== 'string') return '';
     const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(isoDate);
     if (!m) return '';
-    const year = parseInt(m[1], 10);
-    const month = parseInt(m[2], 10);
+    const year = Number.parseInt(m[1], 10);
+    const month = Number.parseInt(m[2], 10);
     if (!Number.isFinite(year) || !Number.isFinite(month)) return '';
     if (month >= 4) {
       return `${year}-${String((year + 1) % 100).padStart(2, '0')}`;
@@ -476,7 +476,7 @@ export class PortfolioAnalyticsService {
       const fy = this.getFinancialYearOf(r.transactionDate);
       if (fy) set.add(fy);
     }
-    return Array.from(set).sort();
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
   }
 
   // ---------------------------------------------------------------------------
@@ -907,8 +907,8 @@ export class PortfolioAnalyticsService {
     if (!isoDate || typeof isoDate !== 'string') return -1;
     const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(isoDate);
     if (!m) return -1;
-    const month = parseInt(m[2], 10);
-    const day = parseInt(m[3], 10);
+    const month = Number.parseInt(m[2], 10);
+    const day = Number.parseInt(m[3], 10);
     if (!Number.isFinite(month) || !Number.isFinite(day)) return -1;
 
     // Period 0: April 1 to June 15

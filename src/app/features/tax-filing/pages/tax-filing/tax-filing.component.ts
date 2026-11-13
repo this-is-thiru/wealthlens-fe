@@ -214,7 +214,7 @@ export class TaxFilingComponent implements OnInit {
   }
 
   onNavigateSettings(): void {
-    this.router.navigate(['/settings']);
+    void this.router.navigate(['/settings']);
   }
 
   // ============================================================
@@ -714,7 +714,7 @@ export class TaxFilingComponent implements OnInit {
       if (livePrice === undefined) {
         livePrice = this.livePrices.get(nameKey);
       }
-      const mockCmp = (livePrice !== undefined && !isNaN(livePrice))
+      const mockCmp = (livePrice !== undefined && !Number.isNaN(livePrice))
         ? livePrice
         : this.getMockCurrentPrice(h.stockCode || h.stockName, h.avgPrice);
 

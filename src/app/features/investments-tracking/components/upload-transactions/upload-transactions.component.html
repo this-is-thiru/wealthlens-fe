@@ -38,8 +38,10 @@
           </p>
           <input
             #fileInput
+            id="file-upload"
             type="file"
             accept=".xlsx"
+            aria-label="Upload XLSX file"
             class="hidden"
             (change)="onFilePicked($event)"
           />
@@ -231,8 +233,10 @@
                 <lucide-icon name="search" class="w-4 h-4 text-text-disabled"></lucide-icon>
               </span>
               <input
+                id="upload-search"
                 type="text"
                 [(ngModel)]="searchQuery"
+                aria-label="Search transactions"
                 (ngModelChange)="applyFilters()"
                 placeholder="Search rows..."
                 class="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-surface-hover border border-border text-white placeholder-text-disabled focus:ring-1 focus:ring-accent focus:outline-none"
@@ -255,7 +259,7 @@
             >
               <ng-template pTemplate="header">
                 <tr>
-                  <th *ngFor="let col of headers" [pSortableColumn]="col" 
+                  <th scope="col" *ngFor="let col of headers" [pSortableColumn]="col" 
                       [ngClass]="(isPriceColumn(col) || isQtyColumn(col)) ? 'text-right' : 'text-left'"
                       class="whitespace-nowrap px-4 py-3 bg-surface text-xs font-semibold uppercase tracking-wider text-text-secondary border-b border-border">
                     <div class="flex items-center gap-1 whitespace-nowrap" [ngClass]="(isPriceColumn(col) || isQtyColumn(col)) ? 'justify-end' : 'justify-start'">

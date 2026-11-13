@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, throwError, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { HttpClient, HttpEvent, HttpEventType, HttpErrorResponse } from '@angular/common/http';
+import { catchError } from 'rxjs/operators';
+import { HttpClient, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { BaseurlService } from './baseurl.service';
-import { TransactionsResponse } from '@models/transactions-response.model';
-import { RedriveResult } from '@models/redrive-result.model';
+import { TransactionsResponse } from '../../shared/models/transactions-response.model';
+import { RedriveResult } from '../../shared/models/redrive-result.model';
 
 @Injectable({
   providedIn: 'root',
@@ -174,7 +174,12 @@ export class TransactionService {
   } {
     const text = typeof body === 'string' ? body : '';
     const listItems = (s: string): string[] => {
-      const inner = s.match(/\[(.*)\]\s*$/s)?.[1] ?? '';
+      const openBracket = s.lastIndexOf('[');
+      const closeBracket = s.lastIndexOf(']');
+      if (openBracket === -1 || closeBracket <= openBracket) {
+        return [];
+      }
+      const inner = s.slice(openBracket + 1, closeBracket);
       return inner.split(',').map((x) => x.trim()).filter(Boolean);
     };
 

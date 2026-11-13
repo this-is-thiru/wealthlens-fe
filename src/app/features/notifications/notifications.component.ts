@@ -162,7 +162,7 @@ export class NotificationsComponent {
   open(notification: Notification): void {
     this.notificationService.markAsRead(notification.id);
     if (notification.link) {
-      this.router.navigateByUrl(notification.link);
+      void this.router.navigateByUrl(notification.link);
     }
   }
 

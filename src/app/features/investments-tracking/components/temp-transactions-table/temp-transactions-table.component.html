@@ -155,28 +155,28 @@
         paginatorDropdownAppendTo="body" [tableStyle]="{ 'min-width': '56rem' }" responsiveLayout="scroll" styleClass="p-datatable-sm w-full">
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="stockName">
+            <th scope="col" pSortableColumn="stockName">
               <div class="flex items-center gap-1 whitespace-nowrap">Stock <p-sortIcon field="stockName"></p-sortIcon></div>
             </th>
-            <th pSortableColumn="transactionType">
+            <th scope="col" pSortableColumn="transactionType">
               <div class="flex items-center gap-1 whitespace-nowrap">Type <p-sortIcon field="transactionType"></p-sortIcon></div>
             </th>
-            <th pSortableColumn="quantity" class="text-right">
+            <th scope="col" pSortableColumn="quantity" class="text-right">
               <div class="flex items-center justify-end gap-1 whitespace-nowrap">Qty <p-sortIcon field="quantity"></p-sortIcon></div>
             </th>
-            <th pSortableColumn="price" class="text-right">
+            <th scope="col" pSortableColumn="price" class="text-right">
               <div class="flex items-center justify-end gap-1 whitespace-nowrap">Price <p-sortIcon field="price"></p-sortIcon></div>
             </th>
-            <th pSortableColumn="totalValue" class="text-right">
+            <th scope="col" pSortableColumn="totalValue" class="text-right">
               <div class="flex items-center justify-end gap-1 whitespace-nowrap">Total <p-sortIcon field="totalValue"></p-sortIcon></div>
             </th>
-            <th class="text-right">
+            <th scope="col" class="text-right">
               <div class="flex items-center justify-end whitespace-nowrap">Charges</div>
             </th>
-            <th pSortableColumn="transactionDate">
+            <th scope="col" pSortableColumn="transactionDate">
               <div class="flex items-center gap-1 whitespace-nowrap">Date <p-sortIcon field="transactionDate"></p-sortIcon></div>
             </th>
-            <th pSortableColumn="brokerName">
+            <th scope="col" pSortableColumn="brokerName">
               <div class="flex items-center gap-1 whitespace-nowrap">Broker <p-sortIcon field="brokerName"></p-sortIcon></div>
             </th>
           </tr>

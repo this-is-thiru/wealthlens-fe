@@ -63,7 +63,7 @@ export class ChangePasswordComponent implements OnInit {
   }
 
   onClose(): void {
-    this.router.navigate([{ outlets: { modal: null } }]);
+    void this.router.navigate([{ outlets: { modal: null } }]);
     this.close.emit();
   }
 

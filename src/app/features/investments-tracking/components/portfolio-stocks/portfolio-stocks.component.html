@@ -13,7 +13,8 @@
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
           <lucide-icon name="Search" class="w-4 h-4 text-text-disabled"></lucide-icon>
         </span>
-        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()"
+        <input id="stocks-search" type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()"
+          aria-label="Search stocks"
           placeholder="Search stock, code, asset type..."
           class="w-full pl-9 pr-8 py-2 text-sm rounded-lg bg-surface-hover border border-border text-white placeholder-text-disabled focus:ring-1 focus:ring-purple-accent focus:outline-none" />
         @if (searchQuery) {
@@ -88,35 +89,35 @@
         >
           <ng-template pTemplate="header">
             <tr>
-              <th style="width: 3.5rem"></th>
-              <th pSortableColumn="stockName">
+              <th scope="col" style="width: 3.5rem"></th>
+              <th scope="col" pSortableColumn="stockName">
                 <div class="flex items-center gap-1 whitespace-nowrap">Stock <p-sortIcon field="stockName"></p-sortIcon></div>
               </th>
-              <th pSortableColumn="totalBought" class="text-right">
+              <th scope="col" pSortableColumn="totalBought" class="text-right">
                 <div class="flex items-center justify-end gap-1 whitespace-nowrap">Bought <p-sortIcon field="totalBought"></p-sortIcon></div>
               </th>
-              <th pSortableColumn="totalSold" class="text-right">
+              <th scope="col" pSortableColumn="totalSold" class="text-right">
                 <div class="flex items-center justify-end gap-1 whitespace-nowrap">Sold <p-sortIcon field="totalSold"></p-sortIcon></div>
               </th>
-              <th pSortableColumn="netHeld" class="text-right">
+              <th scope="col" pSortableColumn="netHeld" class="text-right">
                 <div class="flex items-center justify-end gap-1 whitespace-nowrap">Net Held <p-sortIcon field="netHeld"></p-sortIcon></div>
               </th>
-              <th pSortableColumn="totalInvested" class="text-right">
+              <th scope="col" pSortableColumn="totalInvested" class="text-right">
                 <div class="flex items-center justify-end gap-1 whitespace-nowrap">Invested <p-sortIcon field="totalInvested"></p-sortIcon></div>
               </th>
-              <th pSortableColumn="netInvested" class="text-right">
+              <th scope="col" pSortableColumn="netInvested" class="text-right">
                 <div class="flex items-center justify-end gap-1 whitespace-nowrap">Net ₹ <p-sortIcon field="netInvested"></p-sortIcon></div>
               </th>
-              <th pSortableColumn="txnCount" class="text-right">
+              <th scope="col" pSortableColumn="txnCount" class="text-right">
                 <div class="flex items-center justify-end gap-1 whitespace-nowrap">Txns <p-sortIcon field="txnCount"></p-sortIcon></div>
               </th>
-              <th pSortableColumn="avgPrice" class="text-right">
+              <th scope="col" pSortableColumn="avgPrice" class="text-right">
                 <div class="flex items-center justify-end gap-1 whitespace-nowrap">Avg ₹ <p-sortIcon field="avgPrice"></p-sortIcon></div>
               </th>
-              <th pSortableColumn="totalCharges" class="text-right">
+              <th scope="col" pSortableColumn="totalCharges" class="text-right">
                 <div class="flex items-center justify-end gap-1 whitespace-nowrap">Charges <p-sortIcon field="totalCharges"></p-sortIcon></div>
               </th>
-              <th>
+              <th scope="col">
                 <div class="flex items-center gap-1 whitespace-nowrap">% Share</div>
               </th>
             </tr>
@@ -261,13 +262,13 @@
                         <p-table [value]="filteredTxns" [tableStyle]="{ 'min-width': '48rem' }" responsiveLayout="scroll" styleClass="p-datatable-sm w-full">
                           <ng-template pTemplate="header">
                             <tr class="border-b border-divider bg-surface-alt">
-                              <th class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-left">Type</th>
-                              <th class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-right">Qty</th>
-                              <th class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-right">Price</th>
-                              <th class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-right">Total</th>
-                              <th class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-left">Date</th>
-                              <th class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-left">Broker</th>
-                              <th class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-right">Charges</th>
+                              <th scope="col" class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-left">Type</th>
+                              <th scope="col" class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-right">Qty</th>
+                              <th scope="col" class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-right">Price</th>
+                              <th scope="col" class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-right">Total</th>
+                              <th scope="col" class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-left">Date</th>
+                              <th scope="col" class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-left">Broker</th>
+                              <th scope="col" class="px-4 py-2 text-2xs font-bold text-gray-400 uppercase tracking-wider text-right">Charges</th>
                             </tr>
                           </ng-template>
                           <ng-template pTemplate="body" let-t>
