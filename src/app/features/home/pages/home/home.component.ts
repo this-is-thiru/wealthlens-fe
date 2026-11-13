@@ -101,9 +101,9 @@ export class HomeComponent implements OnInit, AfterViewInit {
   // ✅ Routing with Authentication Check
   onNavigate(route: string) {
     if (this.auth.isUserAuthenticated()) {
-      this.router.navigate([`/${route}`]);
+      void this.router.navigate([`/${route}`]);
     } else {
-      this.router.navigate([{ outlets: { modal: ['sign-in'] } }], { queryParams: { returnUrl: `/${route}` } });
+      void this.router.navigate([{ outlets: { modal: ['sign-in'] } }], { queryParams: { returnUrl: `/${route}` } });
     }
   }
 

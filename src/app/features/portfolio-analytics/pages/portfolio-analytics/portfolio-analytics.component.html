@@ -95,12 +95,14 @@
 
             @if (selectedPreset === 'custom') {
               <div class="flex items-center gap-2">
-                <input type="date"
+                <input id="analytics-from-date" type="date"
+                  aria-label="From date"
                   [ngModel]="from"
                   (ngModelChange)="from = $event; onDateFromChange()"
                   class="px-2.5 py-1.5 text-xs rounded-lg bg-surface-hover border border-border text-white focus:ring-1 focus:ring-accent focus:outline-none" />
                 <span class="text-text-muted text-xs">→</span>
-                <input type="date"
+                <input id="analytics-to-date" type="date"
+                  aria-label="To date"
                   [ngModel]="to"
                   (ngModelChange)="to = $event; onDateToChange()"
                   class="px-2.5 py-1.5 text-xs rounded-lg bg-surface-hover border border-border text-white focus:ring-1 focus:ring-accent focus:outline-none" />
@@ -394,9 +396,9 @@
                     responsiveLayout="scroll" styleClass="p-datatable-sm w-full" [rowHover]="true">
                     <ng-template pTemplate="header">
                       <tr>
-                        <th class="text-left whitespace-nowrap">Stock</th>
-                        <th class="text-right whitespace-nowrap">Realized P&amp;L</th>
-                        <th class="text-right whitespace-nowrap"># Sells</th>
+                        <th scope="col" class="text-left whitespace-nowrap">Stock</th>
+                        <th scope="col" class="text-right whitespace-nowrap">Realized P&amp;L</th>
+                        <th scope="col" class="text-right whitespace-nowrap"># Sells</th>
                       </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-m>
@@ -436,9 +438,9 @@
                     responsiveLayout="scroll" styleClass="p-datatable-sm w-full" [rowHover]="true">
                     <ng-template pTemplate="header">
                       <tr>
-                        <th class="text-left whitespace-nowrap">Stock</th>
-                        <th class="text-right whitespace-nowrap">Realized P&amp;L</th>
-                        <th class="text-right whitespace-nowrap"># Sells</th>
+                        <th scope="col" class="text-left whitespace-nowrap">Stock</th>
+                        <th scope="col" class="text-right whitespace-nowrap">Realized P&amp;L</th>
+                        <th scope="col" class="text-right whitespace-nowrap"># Sells</th>
                       </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-m>
@@ -550,11 +552,11 @@
                     <p-table [value]="taxGainsSummary?.byFy || []" responsiveLayout="scroll" styleClass="p-datatable-sm w-full">
                       <ng-template pTemplate="header">
                         <tr>
-                          <th>Financial Year</th>
-                          <th class="text-right">Sales Count</th>
-                          <th class="text-right">STCG</th>
-                          <th class="text-right">LTCG</th>
-                          <th class="text-right">Total Gain</th>
+                          <th scope="col">Financial Year</th>
+                          <th scope="col" class="text-right">Sales Count</th>
+                          <th scope="col" class="text-right">STCG</th>
+                          <th scope="col" class="text-right">LTCG</th>
+                          <th scope="col" class="text-right">Total Gain</th>
                         </tr>
                       </ng-template>
                       <ng-template pTemplate="body" let-f>
@@ -589,11 +591,11 @@
                     <p-table [value]="taxGainsSummary?.byAssetType || []" responsiveLayout="scroll" styleClass="p-datatable-sm w-full">
                       <ng-template pTemplate="header">
                         <tr>
-                          <th>Asset Type</th>
-                          <th class="text-right">Sales Count</th>
-                          <th class="text-right">STCG</th>
-                          <th class="text-right">LTCG</th>
-                          <th class="text-right">Total Gain</th>
+                          <th scope="col">Asset Type</th>
+                          <th scope="col" class="text-right">Sales Count</th>
+                          <th scope="col" class="text-right">STCG</th>
+                          <th scope="col" class="text-right">LTCG</th>
+                          <th scope="col" class="text-right">Total Gain</th>
                         </tr>
                       </ng-template>
                       <ng-template pTemplate="body" let-a>
@@ -634,14 +636,14 @@
                   responsiveLayout="scroll" styleClass="p-datatable-sm w-full" [rowHover]="true">
                   <ng-template pTemplate="header">
                     <tr>
-                      <th>Asset / Stock</th>
-                      <th>Sale Date</th>
-                      <th>Purchase Date</th>
-                      <th class="text-right">Qty</th>
-                      <th class="text-right">Sale Value</th>
-                      <th class="text-right">Cost Basis</th>
-                      <th class="text-center">Period</th>
-                      <th class="text-right">Realized P&amp;L</th>
+                      <th scope="col">Asset / Stock</th>
+                      <th scope="col">Sale Date</th>
+                      <th scope="col">Purchase Date</th>
+                      <th scope="col" class="text-right">Qty</th>
+                      <th scope="col" class="text-right">Sale Value</th>
+                      <th scope="col" class="text-right">Cost Basis</th>
+                      <th scope="col" class="text-center">Period</th>
+                      <th scope="col" class="text-right">Realized P&amp;L</th>
                     </tr>
                   </ng-template>
                   <ng-template pTemplate="body" let-g>
@@ -700,7 +702,7 @@
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                       <lucide-icon name="Search" class="w-4 h-4 text-text-disabled"></lucide-icon>
                     </span>
-                    <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyHoldingsFilters()"
+                    <input id="analytics-search" type="text" [(ngModel)]="searchQuery" aria-label="Search holdings" (ngModelChange)="applyHoldingsFilters()"
                       placeholder="Search stock, code, asset type..."
                       class="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-surface-hover border border-border text-white placeholder-text-disabled focus:ring-1 focus:ring-accent focus:outline-none" />
                   </div>
@@ -730,31 +732,31 @@
                     responsiveLayout="scroll" styleClass="p-datatable-sm w-full" [rowHover]="true">
                     <ng-template pTemplate="header">
                       <tr>
-                        <th pSortableColumn="stockName" class="text-left cursor-pointer whitespace-nowrap">
+                        <th scope="col" pSortableColumn="stockName" class="text-left cursor-pointer whitespace-nowrap">
                           <div class="flex items-center gap-1">Stock <p-sortIcon field="stockName"></p-sortIcon></div>
                         </th>
-                        <th pSortableColumn="totalBought" class="text-right cursor-pointer whitespace-nowrap">
+                        <th scope="col" pSortableColumn="totalBought" class="text-right cursor-pointer whitespace-nowrap">
                           <div class="flex items-center justify-end gap-1">Bought Qty <p-sortIcon field="totalBought"></p-sortIcon></div>
                         </th>
-                        <th pSortableColumn="totalSold" class="text-right cursor-pointer whitespace-nowrap">
+                        <th scope="col" pSortableColumn="totalSold" class="text-right cursor-pointer whitespace-nowrap">
                           <div class="flex items-center justify-end gap-1">Sold Qty <p-sortIcon field="totalSold"></p-sortIcon></div>
                         </th>
-                        <th pSortableColumn="netHeld" class="text-right cursor-pointer whitespace-nowrap">
+                        <th scope="col" pSortableColumn="netHeld" class="text-right cursor-pointer whitespace-nowrap">
                           <div class="flex items-center justify-end gap-1">Net Held <p-sortIcon field="netHeld"></p-sortIcon></div>
                         </th>
-                        <th pSortableColumn="avgPrice" class="text-right cursor-pointer whitespace-nowrap">
+                        <th scope="col" pSortableColumn="avgPrice" class="text-right cursor-pointer whitespace-nowrap">
                           <div class="flex items-center justify-end gap-1">Avg Buy Price <p-sortIcon field="avgPrice"></p-sortIcon></div>
                         </th>
-                        <th pSortableColumn="totalInvested" class="text-right cursor-pointer whitespace-nowrap">
+                        <th scope="col" pSortableColumn="totalInvested" class="text-right cursor-pointer whitespace-nowrap">
                           <div class="flex items-center justify-end gap-1">Total Invested <p-sortIcon field="totalInvested"></p-sortIcon></div>
                         </th>
-                        <th pSortableColumn="firstDate" class="text-left cursor-pointer whitespace-nowrap">
+                        <th scope="col" pSortableColumn="firstDate" class="text-left cursor-pointer whitespace-nowrap">
                           <div class="flex items-center gap-1">First Trade <p-sortIcon field="firstDate"></p-sortIcon></div>
                         </th>
-                        <th pSortableColumn="lastDate" class="text-left cursor-pointer whitespace-nowrap">
+                        <th scope="col" pSortableColumn="lastDate" class="text-left cursor-pointer whitespace-nowrap">
                           <div class="flex items-center gap-1">Last Trade <p-sortIcon field="lastDate"></p-sortIcon></div>
                         </th>
-                        <th pSortableColumn="sharePercent" class="text-right cursor-pointer whitespace-nowrap" style="min-width: 10rem;">
+                        <th scope="col" pSortableColumn="sharePercent" class="text-right cursor-pointer whitespace-nowrap" style="min-width: 10rem;">
                           <div class="flex items-center justify-end gap-1">% Portfolio <p-sortIcon field="sharePercent"></p-sortIcon></div>
                         </th>
                       </tr>

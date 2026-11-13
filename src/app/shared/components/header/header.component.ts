@@ -95,18 +95,18 @@ export class HeaderComponent {
   // --- Auth-based navigation ---
   onNavigate(route: string): void {
     if (this.authService.isUserAuthenticated()) {
-      this.router.navigate([`/${route}`]);
+      void this.router.navigate([`/${route}`]);
     } else {
-      this.router.navigate([{ outlets: { modal: ['sign-in'] } }], { queryParams: { returnUrl: `/${route}` } });
+      void this.router.navigate([{ outlets: { modal: ['sign-in'] } }], { queryParams: { returnUrl: `/${route}` } });
     }
   }
 
   openSignIn(): void {
-    this.router.navigate([{ outlets: { modal: [AuthModalRoute.SIGN_IN] } }]);
+    void this.router.navigate([{ outlets: { modal: [AuthModalRoute.SIGN_IN] } }]);
   }
 
   openChangePassword(): void {
-    this.router.navigate([{ outlets: { modal: [AuthModalRoute.CHANGE_PASSWORD] } }]);
+    void this.router.navigate([{ outlets: { modal: [AuthModalRoute.CHANGE_PASSWORD] } }]);
   }
 
   // --- Toggles ---
@@ -128,7 +128,7 @@ export class HeaderComponent {
   // Leave the demo account and open the sign-up modal on the home page
   signUpFromDemo(): void {
     this.authService.logOut();
-    this.router.navigate([{ outlets: { primary: ['home'], modal: ['sign-up'] } }]);
+    void this.router.navigate([{ outlets: { primary: ['home'], modal: ['sign-up'] } }]);
   }
 
   signOut(): void {
@@ -152,14 +152,14 @@ export class HeaderComponent {
 
   viewAllNotifications(): void {
     this.isNotificationDropdownOpen = false;
-    this.router.navigate(['/notifications']);
+    void this.router.navigate(['/notifications']);
   }
 
   onNotificationClick(notification: Notification): void {
     this.notificationService.markAsRead(notification.id);
     this.isNotificationDropdownOpen = false;
     if (notification.link) {
-      this.router.navigateByUrl(notification.link);
+      void this.router.navigateByUrl(notification.link);
     }
   }
 

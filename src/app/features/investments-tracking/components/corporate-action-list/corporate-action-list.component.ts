@@ -167,7 +167,7 @@ export class CorporateActionListComponent implements OnInit {
   formatDate(value: string | null | undefined): string {
     if (!value) return '—';
     const d = new Date(value);
-    return isNaN(d.getTime())
+    return Number.isNaN(d.getTime())
       ? value
       : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   }

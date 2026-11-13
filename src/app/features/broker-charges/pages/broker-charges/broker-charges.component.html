@@ -228,8 +228,8 @@
                 <!-- Conditional MF Holding Days -->
                 @if (simAssetType() === 'MUTUAL_FUND' && simEvent() === 'SELL') {
                   <div class="p-3 bg-purple-950/20 border border-purple-500/20 rounded-lg">
-                    <label class="block text-2xs font-semibold text-purple-300 uppercase mb-1">Holding Days (Exit Load)</label>
-                    <input type="number" [(ngModel)]="simHoldingDays" (input)="runSimulation()"
+                    <label for="sim-holding-days" class="block text-2xs font-semibold text-purple-300 uppercase mb-1">Holding Days (Exit Load)</label>
+                    <input id="sim-holding-days" type="number" [(ngModel)]="simHoldingDays" (input)="runSimulation()"
                            class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white font-mono" />
                   </div>
                 }
@@ -366,10 +366,12 @@
               </div>
 
               <div class="flex items-center gap-2">
-                <input type="date" [(ngModel)]="filterFromDate" (change)="loadLedger()"
+                <input id="ledger-from-date" type="date" [(ngModel)]="filterFromDate" (change)="loadLedger()"
+                       aria-label="From date"
                        class="bg-surface border border-border rounded px-2 py-1 text-xs text-white" />
                 <span class="text-xs text-text-muted">to</span>
-                <input type="date" [(ngModel)]="filterToDate" (change)="loadLedger()"
+                <input id="ledger-to-date" type="date" [(ngModel)]="filterToDate" (change)="loadLedger()"
+                       aria-label="To date"
                        class="bg-surface border border-border rounded px-2 py-1 text-xs text-white" />
                 <ui-button variant="secondary" size="sm" (click)="loadLedger()" [loading]="ledgerLoading()">Filter</ui-button>
               </div>
@@ -660,16 +662,16 @@
           <div class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-surface-alt border border-border rounded-xl">
               <div>
-                <label class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Billing Frequency</label>
-                <select [(ngModel)]="amcFrequency" class="w-full bg-surface border border-border rounded px-2.5 py-1.5 text-xs text-white">
+                <label for="amc-frequency" class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Billing Frequency</label>
+                <select id="amc-frequency" [(ngModel)]="amcFrequency" class="w-full bg-surface border border-border rounded px-2.5 py-1.5 text-xs text-white">
                   <option value="QUARTERLY">Quarterly AMC</option>
                   <option value="YEARLY">Yearly AMC</option>
                 </select>
               </div>
 
               <div>
-                <label class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Target Billing Date</label>
-                <input type="date" [(ngModel)]="amcBilledThrough"
+                <label for="sim-amc-billed-through" class="block text-2xs font-semibold text-text-secondary uppercase mb-1">Target Billing Date</label>
+                <input id="sim-amc-billed-through" type="date" [(ngModel)]="amcBilledThrough"
                        class="w-full bg-surface border border-border rounded px-2.5 py-1.5 text-xs text-white" />
               </div>
 
@@ -724,7 +726,8 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-surface-alt rounded-lg border border-border">
               <div class="flex items-center gap-2 flex-1">
                 <span class="text-xs text-text-muted">Target User:</span>
-                <input type="email" [(ngModel)]="reconEmail" placeholder="user@domain.com"
+                <input id="recon-email" type="email" [(ngModel)]="reconEmail" placeholder="user@domain.com"
+                       aria-label="Target user email"
                        class="bg-surface border border-border rounded px-2.5 py-1 text-xs text-white max-w-xs w-full" />
                 <ui-button variant="secondary" size="sm" (click)="loadReconciliation()" [loading]="reconLoading()">Run Audit</ui-button>
               </div>
@@ -852,32 +855,32 @@
 
         <div class="space-y-3 text-xs">
           <div>
-            <label class="block text-text-secondary mb-1">Demat Account ID (16-Digit BOID)</label>
-            <input type="text" [(ngModel)]="newDematId" placeholder="1208160012345678"
+            <label for="demat-id" class="block text-text-secondary mb-1">Demat Account ID (16-Digit BOID)</label>
+            <input id="demat-id" type="text" [(ngModel)]="newDematId" placeholder="1208160012345678"
                    class="w-full bg-surface border border-border rounded px-3 py-2 text-white font-mono" />
           </div>
           <div>
-            <label class="block text-text-secondary mb-1">Broker</label>
-            <select [(ngModel)]="newDematBroker" class="w-full bg-surface border border-border rounded px-3 py-2 text-white">
+            <label for="demat-broker" class="block text-text-secondary mb-1">Broker</label>
+            <select id="demat-broker" [(ngModel)]="newDematBroker" class="w-full bg-surface border border-border rounded px-3 py-2 text-white">
               <option value="ZERODHA">Zerodha</option>
               <option value="UPSTOX">Upstox</option>
               <option value="FYERS">Fyers</option>
             </select>
           </div>
           <div>
-            <label class="block text-text-secondary mb-1">Account Holder Name</label>
-            <input type="text" [(ngModel)]="newDematHolder" placeholder="e.g. Self or Spouse"
+            <label for="demat-holder" class="block text-text-secondary mb-1">Account Holder Name</label>
+            <input id="demat-holder" type="text" [(ngModel)]="newDematHolder" placeholder="e.g. Self or Spouse"
                    class="w-full bg-surface border border-border rounded px-3 py-2 text-white" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-text-secondary mb-1">Opening Date</label>
-              <input type="date" [(ngModel)]="newDematOpenedOn"
+              <label for="demat-opened-on" class="block text-text-secondary mb-1">Opening Date</label>
+              <input id="demat-opened-on" type="date" [(ngModel)]="newDematOpenedOn"
                      class="w-full bg-surface border border-border rounded px-3 py-2 text-white font-mono" />
             </div>
             <div>
-              <label class="block text-text-secondary mb-1">AMC Frequency</label>
-              <select [(ngModel)]="newDematFrequency" class="w-full bg-surface border border-border rounded px-3 py-2 text-white">
+              <label for="demat-frequency" class="block text-text-secondary mb-1">AMC Frequency</label>
+              <select id="demat-frequency" [(ngModel)]="newDematFrequency" class="w-full bg-surface border border-border rounded px-3 py-2 text-white">
                 <option value="QUARTERLY">Quarterly</option>
                 <option value="YEARLY">Yearly</option>
               </select>

@@ -90,20 +90,20 @@
     <ui-card>
       <div class="sg-form-grid">
         <div>
-          <label class="sg-label">Text input</label>
-          <ui-input placeholder="Email address" [(ngModel)]="inputValue" />
+          <label for="sg-text-input" class="sg-label">Text input</label>
+          <ui-input id="sg-text-input" placeholder="Email address" [(ngModel)]="inputValue" />
         </div>
         <div>
-          <label class="sg-label">Input with error</label>
-          <ui-input placeholder="Required field" [error]="true" />
+          <label for="sg-error-input" class="sg-label">Input with error</label>
+          <ui-input id="sg-error-input" placeholder="Required field" [error]="true" />
         </div>
         <div>
-          <label class="sg-label">Toggle</label>
-          <ui-toggle [(ngModel)]="toggleValue" />
+          <label for="sg-toggle" class="sg-label">Toggle</label>
+          <ui-toggle id="sg-toggle" [(ngModel)]="toggleValue" />
         </div>
         <div>
-          <label class="sg-label">Radio card</label>
-          <ui-radio-card [selected]="radioValue === 'usd'" (click)="radioValue = 'usd'">USD</ui-radio-card>
+          <label for="sg-radio-usd" class="sg-label">Radio card</label>
+          <ui-radio-card id="sg-radio-usd" [selected]="radioValue === 'usd'" (click)="radioValue = 'usd'">USD</ui-radio-card>
         </div>
       </div>
     </ui-card>
@@ -170,9 +170,9 @@
       <p-table [value]="demoRows" [paginator]="true" [rows]="5">
         <ng-template pTemplate="header">
           <tr>
-            <th>Name</th>
-            <th>Qty</th>
-            <th>Price</th>
+            <th scope="col">Name</th>
+            <th scope="col">Qty</th>
+            <th scope="col">Price</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-row>
