@@ -3,8 +3,8 @@ import { Observable, throwError, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { HttpClient, HttpEvent, HttpEventType, HttpErrorResponse } from '@angular/common/http';
 import { BaseurlService } from './baseurl.service';
-import { TransactionsResponse } from '@models/transactions-response.model';
-import { RedriveResult } from '@models/redrive-result.model';
+import { TransactionsResponse } from '../../shared/models/transactions-response.model';
+import { RedriveResult } from '../../shared/models/redrive-result.model';
 
 @Injectable({
   providedIn: 'root',
