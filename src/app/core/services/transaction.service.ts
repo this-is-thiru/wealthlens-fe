@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, throwError, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { HttpClient, HttpEvent, HttpEventType, HttpErrorResponse } from '@angular/common/http';
+import { catchError } from 'rxjs/operators';
+import { HttpClient, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { BaseurlService } from './baseurl.service';
 import { TransactionsResponse } from '../../shared/models/transactions-response.model';
 import { RedriveResult } from '../../shared/models/redrive-result.model';
