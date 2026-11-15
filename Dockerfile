@@ -3,7 +3,8 @@
 # ---------------------------------------------------------------------------
 # Build stage: install dependencies and compile the Angular app
 # ---------------------------------------------------------------------------
-FROM node:22-alpine AS build
+# Node 24 matches CI and the developer machines; npm 10 (Node 22) rejects their npm 11 lockfile (FD-009)
+FROM node:24-alpine AS build
 
 # Angular project name (angular.json -> projects.<name>); output goes to dist/<name>/browser
 ARG APP_NAME=wealthlens

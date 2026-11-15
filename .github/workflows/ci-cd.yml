@@ -15,7 +15,8 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: '22'
+  # The same major as the developer machines: npm 11 writes package-lock.json, and npm 10 (Node 22) rejects it (FD-009).
+  NODE_VERSION: '24'
   APP_NAME: wealthlens # angular.json -> projects.wealthlens (build output: dist/wealthlens/browser)
   REGISTRY: ghcr.io
 
@@ -39,8 +40,20 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund # no lifecycle scripts; prebuilt binaries are used
 
-      - name: Lint
-        run: npm run lint --if-present # no-op until a "lint" script exists
+      - name: Lint (against the eslint-suppressions.json baseline)
+        run: npm run lint
+
+      - name: Format check (files changed by this PR or push)
+        run: npm run format:check
+        env:
+          # The PR's base branch, or the commit before this push.
+          FORMAT_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+
+      - name: Typecheck (templates and specs)
+        run: npm run typecheck
+
+      - name: Plans check (a DONE item leaves no open step)
+        run: npm run plans:check
 
       - name: Unit tests with coverage
         run: npm run test:ci

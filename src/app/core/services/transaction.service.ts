@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, throwError, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { HttpClient, HttpEvent, HttpEventType, HttpErrorResponse } from '@angular/common/http';
+import { catchError } from 'rxjs/operators';
+import { HttpClient, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { BaseurlService } from './baseurl.service';
-import { TransactionsResponse } from '@models/transactions-response.model';
-import { RedriveResult } from '@models/redrive-result.model';
+import { TransactionsResponse } from '../../shared/models/transactions-response.model';
+import { RedriveResult } from '../../shared/models/redrive-result.model';
 
 @Injectable({
   providedIn: 'root',
@@ -36,7 +36,10 @@ export class TransactionService {
       id: i,
       rowId: `port-${i}`,
       email: 'demo@wealthlens.com',
-      stockName: i % 2 === 0 ? 'QUANT SMALL CAP FUND - DIRECT' : 'SBI BLUECHIP FUND - DIRECT',
+      stockName:
+        i % 2 === 0
+          ? 'QUANT SMALL CAP FUND - DIRECT'
+          : 'SBI BLUECHIP FUND - DIRECT',
       stockCode: i % 2 === 0 ? 'QUANT_SMALL' : 'SBI_BLUE',
       assetType: 'MUTUAL_FUND',
       exchangeName: i % 3 === 0 ? 'BSE' : 'NSE',
@@ -47,7 +50,7 @@ export class TransactionService {
       totalValue: 1000 + i * 100,
       brokerCharges: 5,
       miscCharges: 2,
-      transactionDate: `2023-${String(((i % 12) + 1)).padStart(2, '0')}-15`,
+      transactionDate: `2023-${String((i % 12) + 1).padStart(2, '0')}-15`,
     }));
   }
 
@@ -74,7 +77,7 @@ export class TransactionService {
         price: 160,
         brokerCharges: 25,
         miscCharges: 15,
-      }
+      },
     ];
   }
 
@@ -94,10 +97,16 @@ export class TransactionService {
 
   addTransaction(email: string, transactionData: any): Observable<any> {
     if (email === 'demo@wealthlens.com') {
-      return throwError(() => new HttpErrorResponse({
-        status: 403,
-        error: { message: 'Adding transactions is disabled in read-only guest session.' }
-      }));
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 403,
+            error: {
+              message:
+                'Adding transactions is disabled in read-only guest session.',
+            },
+          }),
+      );
     }
     const url = `${this.BASE_URL.getBaseUrl()}/${email}/transaction`;
     return this.http.post(url, transactionData).pipe(
@@ -137,12 +146,21 @@ export class TransactionService {
   //   );
   // }
 
-  uploadTransactions(email: string, file: File, quarter?: string): Observable<HttpEvent<any>> {
+  uploadTransactions(
+    email: string,
+    file: File,
+    quarter?: string,
+  ): Observable<HttpEvent<any>> {
     if (email === 'demo@wealthlens.com') {
-      return throwError(() => new HttpErrorResponse({
-        status: 403,
-        error: { message: 'File import is disabled in read-only guest session.' }
-      }));
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 403,
+            error: {
+              message: 'File import is disabled in read-only guest session.',
+            },
+          }),
+      );
     }
     const formData = new FormData();
     formData.append('file', file);
@@ -175,7 +193,10 @@ export class TransactionService {
     const text = typeof body === 'string' ? body : '';
     const listItems = (s: string): string[] => {
       const inner = s.match(/\[(.*)\]\s*$/s)?.[1] ?? '';
-      return inner.split(',').map((x) => x.trim()).filter(Boolean);
+      return inner
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean);
     };
 
     if (text.startsWith('No transaction uploaded')) {
@@ -212,11 +233,15 @@ export class TransactionService {
    * Rewrites Java exception text the upload endpoint passes through. "No enum constant
    * com...BrokerName.Zerodha" comes from Enum.valueOf on a cell; an empty suffix means a blank cell.
    */
-  private friendlyServerMessage(message: string | undefined): string | undefined {
+  private friendlyServerMessage(
+    message: string | undefined,
+  ): string | undefined {
     if (!message) return message;
     const enumMatch = message.match(/No enum constant [\w.]*\.(\w+)\.(.*)$/);
     if (enumMatch) {
-      const column = enumMatch[1].replace(/([a-z])([A-Z])/g, '$1 $2').toUpperCase();
+      const column = enumMatch[1]
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .toUpperCase();
       const value = enumMatch[2].trim();
       return value
         ? `A row has ${column} "${value}", which isn't allowed. Check the spelling and use capitals.`
@@ -231,7 +256,11 @@ export class TransactionService {
    * `err.error.message`) and client-side validation errors (read from
    * `err.category`).
    */
-  classifyUploadError(err: any): { category: string; title: string; message: string } {
+  classifyUploadError(err: any): {
+    category: string;
+    title: string;
+    message: string;
+  } {
     // Client-side validation categories: caller passes `{ category: 'no-file' }`
     // (or similar) and we return the fixed mapping.
     switch (err?.category) {
@@ -265,8 +294,13 @@ export class TransactionService {
     // Error bodies arrive wrapped as { data: { message } }; the auth interceptor only unwraps successes.
     const serverBody = err?.error?.data ?? err?.error;
     const bodyMessage =
-      typeof serverBody === 'string' ? serverBody : typeof serverBody?.message === 'string' ? serverBody.message : undefined;
-    const rawServerMessage: string | undefined = this.friendlyServerMessage(bodyMessage) || err?.message;
+      typeof serverBody === 'string'
+        ? serverBody
+        : typeof serverBody?.message === 'string'
+          ? serverBody.message
+          : undefined;
+    const rawServerMessage: string | undefined =
+      this.friendlyServerMessage(bodyMessage) || err?.message;
 
     // status 0 (or missing) → network vs unknown
     if (status === 0) {
@@ -281,7 +315,8 @@ export class TransactionService {
         return {
           category: 'network',
           title: 'Connection problem',
-          message: "We couldn't reach the server. Check your internet and try again.",
+          message:
+            "We couldn't reach the server. Check your internet and try again.",
         };
       }
       return {
@@ -308,33 +343,38 @@ export class TransactionService {
         return {
           category: 'not-found',
           title: 'Portfolio not found',
-          message: "We couldn't find a portfolio for your account. Please contact support.",
+          message:
+            "We couldn't find a portfolio for your account. Please contact support.",
         };
       case 413:
         return {
           category: 'payload-too-large',
           title: 'Server rejected file',
-          message: 'The file is too large for our server. Please try a smaller file.',
+          message:
+            'The file is too large for our server. Please try a smaller file.',
         };
       case 415:
         return {
           category: 'unsupported-media',
           title: 'Unsupported file',
-          message: "The server couldn't read this file. Make sure it's a valid .xlsx.",
+          message:
+            "The server couldn't read this file. Make sure it's a valid .xlsx.",
         };
       case 400:
         return {
           category: 'bad-request',
           title: "Couldn't process file",
           message:
-            rawServerMessage || 'Please check the file format and quarter, then try again.',
+            rawServerMessage ||
+            'Please check the file format and quarter, then try again.',
         };
       default:
         if (status >= 500) {
           return {
             category: 'server',
             title: 'Server error',
-            message: 'Something went wrong on our side. Please try again in a moment.',
+            message:
+              'Something went wrong on our side. Please try again in a moment.',
           };
         }
         return {
@@ -351,7 +391,10 @@ export class TransactionService {
   }
 
   /** Fetch current transactions */
-  getCurrentTransactions(email: string, filters: any[] = []): Observable<TransactionsResponse[]> {
+  getCurrentTransactions(
+    email: string,
+    filters: any[] = [],
+  ): Observable<TransactionsResponse[]> {
     if (email === 'demo@wealthlens.com') {
       return of(this.mockPortfolioData());
     }
@@ -383,7 +426,6 @@ export class TransactionService {
     return this.http.post<RedriveResult>(url, {});
   }
 
-
   /** Fetch holdings */
   getAllHoldings(email: string): Observable<any> {
     if (email === 'demo@wealthlens.com') {
@@ -394,10 +436,13 @@ export class TransactionService {
   }
 
   /** Fetch transactions for a single stock */
-  getTransactionsByStock(email: string, stockCode: string): Observable<TransactionsResponse[]> {
+  getTransactionsByStock(
+    email: string,
+    stockCode: string,
+  ): Observable<TransactionsResponse[]> {
     if (email === 'demo@wealthlens.com') {
       const all = this.mockPortfolioData();
-      return of(all.filter(t => t.stockCode === stockCode));
+      return of(all.filter((t) => t.stockCode === stockCode));
     }
     const url = `${this.BASE_URL.getBaseUrl()}/transactions/user/${email}`;
     const queryFilters = [
@@ -409,8 +454,8 @@ export class TransactionService {
         expressionLogicalOperation: 'AND',
         allowEmptyOrNull: false,
         caseSensitive: false,
-        isDateField: false
-      }
+        isDateField: false,
+      },
     ];
     return this.http.post<TransactionsResponse[]>(url, { queryFilters });
   }
@@ -418,10 +463,16 @@ export class TransactionService {
   /** Clear all portfolio records for a user */
   clearAllRecords(email: string): Observable<any> {
     if (email === 'demo@wealthlens.com') {
-      return throwError(() => new HttpErrorResponse({
-        status: 403,
-        error: { message: 'Clearing records is disabled in read-only guest session.' }
-      }));
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 403,
+            error: {
+              message:
+                'Clearing records is disabled in read-only guest session.',
+            },
+          }),
+      );
     }
     const url = `${this.BASE_URL.getBaseUrl()}/portfolio/user/${email}/clear/all`;
     return this.http.post(url, {});

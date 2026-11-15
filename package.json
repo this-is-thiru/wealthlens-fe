@@ -10,7 +10,13 @@
     "serve:prod": "serve -s dist/wealthlens",
     "test:watch": "ng test",
     "test:coverage": "ng test --watch=false --coverage",
-    "test:ci": "ng test --configuration=ci"
+    "test:ci": "ng test --configuration=ci",
+    "lint": "eslint src",
+    "format:check": "node scripts/check-format.mjs",
+    "format:changed": "node scripts/check-format.mjs --write",
+    "typecheck": "ngc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
+    "plans:check": "node scripts/check-plans.mjs",
+    "verify": "npm run lint && npm run format:check && npm run typecheck"
   },
   "private": true,
   "dependencies": {
@@ -40,17 +46,21 @@
     "@angular/cli": "^21.2.15",
     "@angular/compiler-cli": "^21.2.17",
     "@babel/core": "^7.29.7",
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/typography": "^0.5.20",
     "@types/eslint": "^9.6.1",
     "@types/node": "^22.20.5",
     "@vitest/coverage-v8": "^4.1.12",
+    "angular-eslint": "21.4.0",
+    "eslint": "^10.3.0",
     "happy-dom": "^21.0.4",
     "postcss": "^8.5.15",
     "prettier": "^3.8.4",
     "serve": "^14.2.6",
     "tailwindcss": "^4.3.1",
     "typescript": "~5.9.3",
+    "typescript-eslint": "8.59.2",
     "vitest": "^4.1.12"
   }
 }
