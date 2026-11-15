@@ -35,6 +35,16 @@ placed with prompt P7 and approved before they are written here.
 - **Verify:** the lockfile has `node_modules/@emnapi/core` and `node_modules/@emnapi/runtime`; `npx npm@11 ci` and
   npm 11.6.2 `npm ci --dry-run` both pass; `npm run verify && npm test && npm run build`; the PR's CI run passes.
 
+### FE-000c — Pass the SonarQube quality gate on the setup PR
+- **Goal:** PR 22's gate failed on new code. Reliability was D: `.sort()` with no compare function in
+  `check-format.mjs`. Security was B: `git` was resolved through `PATH`. Coverage was 17.6%: the tooling scripts and
+  `eslint.config.js`, plus 8 untested lines of `transaction.service.ts` that Prettier re-wrapped (FD-002).
+  The fix: an explicit compare function, developer tooling out of Sonar's scope, and tests for those 8 lines (FD-011).
+- **Produces:** `scripts/check-format.mjs`; `sonar-project.properties`;
+  `src/app/core/services/transaction.service.spec.ts`.
+- **Verify:** each new test fails when the behaviour it covers is changed (pasted); `npm run verify && npm test &&
+  npm run build`; the PR's quality gate passes.
+
 ---
 
 ## Phase 1 — Design foundations (3 items)

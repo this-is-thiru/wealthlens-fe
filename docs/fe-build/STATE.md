@@ -3,7 +3,7 @@
 Read it when CHECKPOINT.md points here; write it before every stop.
 
 ```
-Current position : FE-000b DONE (owner "fix the pipeline", 2026-11-15). Next: FE-001 NOT_STARTED, take it with prompt P2
+Current position : FE-000c AWAITING_REVIEW (committed to unblock CI). Then FE-001 with prompt P2
 Last updated     : 2026-11-15
 ```
 
@@ -16,6 +16,7 @@ Last updated     : 2026-11-15
 | FE-000 | DONE | 2026-11-15 | workflow and gates; owner "FE-000 approved" |
 | FE-000a | DONE | 2026-11-15 | CI and Docker on Node 24; owner "FE-000a approved" |
 | FE-000b | DONE | 2026-11-15 | lockfile regenerated with npm 11.21.2; owner "fix the pipeline" |
+| FE-000c | AWAITING_REVIEW | 2026-11-15 | Sonar gate; committed and pushed before review to unblock CI, see FD-011 |
 | FE-001 | NOT_STARTED | | feature inventory |
 | FE-002 | NOT_STARTED | | brief |
 | FE-003 | NOT_STARTED | | foundations |
@@ -35,6 +36,7 @@ Last updated     : 2026-11-15
 | FD-008 | 2026-11-15 | How does a session read the backend for citations? | `.claude/settings.local.json` `permissions.additionalDirectories` holds the backend checkout path. It is git-ignored, because the path is machine-specific. It takes effect in a session started after it was written | owner ("please take the read access") |
 | FD-009 | 2026-11-15 | CI failed: Node 22's npm 10 `npm ci` rejected the npm 11 lockfile (four entries missing). Regenerate the lockfile with npm 10, or move CI and Docker to Node 24? | Node 24 in CI and Docker, matching the developer machines (v24.13.0). The npm 10 lockfile would break again at the next npm 11 install (944 → 938 entries, measured) | owner ("2") |
 | FD-010 | 2026-11-15 | After FD-009, CI's npm ci on Node 24 still reported `@emnapi/core` and `@emnapi/runtime` missing. Why, and the fix? | FD-009 fixed only half. npm 11.6.2 leaves out the `@emnapi` dependencies of `@tailwindcss/oxide-wasm32-wasi` (`master`'s lockfile had them; `ng add angular-eslint` in FE-000 rewrote it). The lockfile is regenerated with npm 11.21.2, and both npm versions install from it. The jsdom tree it drops is an uninstalled optional peer of Vitest (the tests use happy-dom). The owner upgrades the local npm so 11.6.2 never rewrites it again | owner ("fix the pipeline") |
+| FD-011 | 2026-11-15 | PR 22's Sonar gate failed on new code: reliability D, security B, coverage 17.6%. The first touch of an old file re-wraps it (FD-002), so Sonar counts its untested lines as new. Fix how? | (1) a compare function in `check-format.mjs`; (2) `scripts/**`, `eslint.config.js` and `.claude/**` excluded from Sonar, because they are developer tooling no unit test can cover; (3) option A, tests for the re-wrapped untested lines (`transaction.service.spec.ts`, 4 tests on the demo account's guards). Consequence: under FD-002, the first change to an old file must bring its re-wrapped lines to 80% coverage | the owner pasted the gate failure again without choosing A, B or C; Claude applied its recommendation A. Awaiting the owner's confirmation |
 
 ## Blockers
 

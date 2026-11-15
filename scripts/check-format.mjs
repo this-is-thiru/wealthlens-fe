@@ -37,7 +37,10 @@ const changed = new Set([
 ]);
 
 const unformatted = [];
-for (const file of [...changed].filter((f) => CHECKED.test(f)).sort()) {
+const toCheck = [...changed]
+  .filter((f) => CHECKED.test(f))
+  .sort((a, b) => a.localeCompare(b));
+for (const file of toCheck) {
   const info = await prettier.getFileInfo(file, {
     ignorePath: '.prettierignore',
   });
