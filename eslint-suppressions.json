@@ -1,0 +1,398 @@
+{
+  "src/app/core/guards/role.guard.spec.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/app/core/interceptors/auth.interceptor.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/app/core/services/auth.service.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    },
+    "no-console": {
+      "count": 2
+    }
+  },
+  "src/app/core/services/baseurl.service.ts": {
+    "@typescript-eslint/no-empty-function": {
+      "count": 1
+    }
+  },
+  "src/app/core/services/broker-charges.service.ts": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 3
+    }
+  },
+  "src/app/core/services/live-price.service.ts": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "@typescript-eslint/prefer-for-of": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 1
+    },
+    "no-irregular-whitespace": {
+      "count": 1
+    }
+  },
+  "src/app/core/services/notification.service.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 2
+    }
+  },
+  "src/app/core/services/portfolio-analytics.service.spec.ts": {
+    "@typescript-eslint/array-type": {
+      "count": 2
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "src/app/core/services/portfolio-analytics.service.ts": {
+    "@typescript-eslint/array-type": {
+      "count": 1
+    }
+  },
+  "src/app/core/services/storage.service.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 3
+    }
+  },
+  "src/app/core/services/transaction.service.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 12
+    },
+    "no-console": {
+      "count": 2
+    }
+  },
+  "src/app/features/auth/components/change-password/change-password.component.html": {
+    "@angular-eslint/template/label-has-associated-control": {
+      "count": 3
+    }
+  },
+  "src/app/features/auth/components/change-password/change-password.component.ts": {
+    "@angular-eslint/no-output-native": {
+      "count": 1
+    },
+    "@angular-eslint/prefer-inject": {
+      "count": 4
+    }
+  },
+  "src/app/features/auth/components/sign-in/sign-in.component.html": {
+    "@angular-eslint/template/click-events-have-key-events": {
+      "count": 2
+    },
+    "@angular-eslint/template/interactive-supports-focus": {
+      "count": 2
+    }
+  },
+  "src/app/features/auth/components/sign-in/sign-in.component.ts": {
+    "@angular-eslint/no-empty-lifecycle-method": {
+      "count": 1
+    },
+    "@angular-eslint/prefer-inject": {
+      "count": 5
+    },
+    "@typescript-eslint/no-empty-function": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/app/features/auth/components/sign-up/sign-up.component.html": {
+    "@angular-eslint/template/click-events-have-key-events": {
+      "count": 1
+    },
+    "@angular-eslint/template/interactive-supports-focus": {
+      "count": 1
+    }
+  },
+  "src/app/features/auth/components/sign-up/sign-up.component.ts": {
+    "@angular-eslint/prefer-inject": {
+      "count": 5
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/app/features/broker-charges/pages/broker-charges/broker-charges.component.html": {
+    "@angular-eslint/template/label-has-associated-control": {
+      "count": 16
+    }
+  },
+  "src/app/features/home/components/hero-scene/hero-scene.component.ts": {
+    "@angular-eslint/no-output-native": {
+      "count": 1
+    }
+  },
+  "src/app/features/investments-tracking/components/add-corporate-action/add-corporate-action.component.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    },
+    "@typescript-eslint/no-inferrable-types": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/app/features/investments-tracking/components/corporate-action-list/corporate-action-effect.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/app/features/investments-tracking/components/corporate-action-list/corporate-action-list.component.spec.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/app/features/investments-tracking/components/corporate-action-list/corporate-action-list.component.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 11
+    },
+    "@typescript-eslint/no-inferrable-types": {
+      "count": 1
+    }
+  },
+  "src/app/features/investments-tracking/components/portfolio-stocks/portfolio-stocks.component.spec.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/app/features/investments-tracking/components/portfolio-stocks/portfolio-stocks.component.ts": {
+    "@typescript-eslint/consistent-indexed-object-style": {
+      "count": 3
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    },
+    "no-console": {
+      "count": 2
+    }
+  },
+  "src/app/features/investments-tracking/components/temp-corporate-tabs/temp-corporate-tabs.component.ts": {
+    "@typescript-eslint/no-empty-function": {
+      "count": 1
+    }
+  },
+  "src/app/features/investments-tracking/components/temp-transactions-table/temp-transactions-table.component.spec.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/app/features/investments-tracking/components/upload-transactions/upload-transactions.component.html": {
+    "@angular-eslint/template/click-events-have-key-events": {
+      "count": 1
+    },
+    "@angular-eslint/template/interactive-supports-focus": {
+      "count": 1
+    },
+    "@angular-eslint/template/prefer-control-flow": {
+      "count": 7
+    }
+  },
+  "src/app/features/investments-tracking/components/upload-transactions/upload-transactions.component.spec.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 10
+    }
+  },
+  "src/app/features/investments-tracking/components/upload-transactions/upload-transactions.component.ts": {
+    "@angular-eslint/no-empty-lifecycle-method": {
+      "count": 1
+    },
+    "@angular-eslint/no-input-rename": {
+      "count": 1
+    },
+    "@angular-eslint/prefer-inject": {
+      "count": 4
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 9
+    },
+    "@typescript-eslint/no-inferrable-types": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 3
+    }
+  },
+  "src/app/features/investments-tracking/services/corporate-action.service.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 10
+    }
+  },
+  "src/app/features/portfolio-analytics/pages/portfolio-analytics/portfolio-analytics.component.html": {
+    "@angular-eslint/template/prefer-control-flow": {
+      "count": 1
+    }
+  },
+  "src/app/features/portfolio-analytics/pages/portfolio-analytics/portfolio-analytics.component.ts": {
+    "@typescript-eslint/consistent-generic-constructors": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 13
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/app/features/style-guide/style-guide.component.html": {
+    "@angular-eslint/template/label-has-associated-control": {
+      "count": 4
+    }
+  },
+  "src/app/features/style-guide/style-guide.component.ts": {
+    "@angular-eslint/prefer-inject": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    }
+  },
+  "src/app/features/tax-filing/pages/tax-filing/tax-filing.component.html": {
+    "@angular-eslint/template/prefer-control-flow": {
+      "count": 5
+    }
+  },
+  "src/app/features/tax-filing/pages/tax-filing/tax-filing.component.ts": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "src/app/shared/components/expansion-panel/expansion-panel.component.html": {
+    "@angular-eslint/template/click-events-have-key-events": {
+      "count": 1
+    },
+    "@angular-eslint/template/interactive-supports-focus": {
+      "count": 1
+    }
+  },
+  "src/app/shared/components/expansion-panel/expansion-panel.component.ts": {
+    "@typescript-eslint/no-inferrable-types": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/app/shared/components/header/header.component.html": {
+    "@angular-eslint/template/click-events-have-key-events": {
+      "count": 2
+    },
+    "@angular-eslint/template/interactive-supports-focus": {
+      "count": 2
+    }
+  },
+  "src/app/shared/components/notification-toast/notification-toast.component.html": {
+    "@angular-eslint/template/prefer-control-flow": {
+      "count": 4
+    }
+  },
+  "src/app/shared/components/notification-toast/notification-toast.component.spec.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/app/shared/components/notification-toast/notification-toast.component.ts": {
+    "@angular-eslint/no-output-native": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-inferrable-types": {
+      "count": 1
+    }
+  },
+  "src/app/shared/components/notification-toast/toast-container.component.ts": {
+    "@angular-eslint/no-empty-lifecycle-method": {
+      "count": 1
+    },
+    "@angular-eslint/prefer-inject": {
+      "count": 1
+    },
+    "@angular-eslint/template/prefer-control-flow": {
+      "count": 1
+    },
+    "@typescript-eslint/no-empty-function": {
+      "count": 1
+    }
+  },
+  "src/app/shared/directives/tooltip/tooltip.directive.ts": {
+    "@angular-eslint/prefer-inject": {
+      "count": 3
+    },
+    "no-useless-assignment": {
+      "count": 3
+    }
+  },
+  "src/app/shared/models/transactions-response.model.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/app/shared/ui/input/input.component.ts": {
+    "@typescript-eslint/no-empty-function": {
+      "count": 2
+    }
+  },
+  "src/app/shared/ui/modal/modal.component.html": {
+    "@angular-eslint/template/click-events-have-key-events": {
+      "count": 2
+    },
+    "@angular-eslint/template/interactive-supports-focus": {
+      "count": 2
+    }
+  },
+  "src/app/shared/ui/toggle/toggle.component.ts": {
+    "@typescript-eslint/no-empty-function": {
+      "count": 2
+    }
+  },
+  "src/main.ts": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/test-setup.ts": {
+    "@typescript-eslint/no-empty-function": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  }
+}
