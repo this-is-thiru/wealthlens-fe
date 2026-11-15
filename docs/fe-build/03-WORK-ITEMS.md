@@ -21,6 +21,13 @@ placed with prompt P7 and approved before they are written here.
   `src/app/core/services/transaction.service.ts` (FD-007).
 - **Verify:** `bash .claude/hooks/pre-commit-gate-test.sh && npm run verify && npm run plans:check && npm test && npm run build`
 
+### FE-000a — Run CI and Docker on Node 24, the developers' version
+- **Goal:** CI's `npm ci` failed on FE-000's push. CI and Docker ran Node 22 (npm 10), which rejects the npm 11
+  lockfile written on a developer machine (Node 24). One Node major everywhere ends that class of failure (FD-009).
+- **Produces:** `.github/workflows/ci-cd.yml`; `Dockerfile`; `README.md`; `CLAUDE.md`.
+- **Verify:** `npx -y npm@10 ci --dry-run` fails on the committed lockfile and npm 11 `npm ci` passes (both pasted);
+  `npm run verify && npm run plans:check && npm test && npm run build`; the PR's CI run passes.
+
 ---
 
 ## Phase 1 — Design foundations (3 items)

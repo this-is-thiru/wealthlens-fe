@@ -35,7 +35,7 @@ Run a single spec with `npx ng test --watch=false --include src/app/path/to/file
 
 ## Docker
 
-The image is a multi-stage build: `node:22-alpine` compiles the app, and `nginxinc/nginx-unprivileged` serves `dist/wealthlens/browser` as a non-root user on **port 8080**. nginx (`nginx.conf`) provides the SPA fallback, gzip, long-lived caching for fingerprinted assets, `no-cache` for `index.html`, security headers, and a `/healthz` endpoint used by the container `HEALTHCHECK`.
+The image is a multi-stage build: `node:24-alpine` compiles the app, and `nginxinc/nginx-unprivileged` serves `dist/wealthlens/browser` as a non-root user on **port 8080**. nginx (`nginx.conf`) provides the SPA fallback, gzip, long-lived caching for fingerprinted assets, `no-cache` for `index.html`, security headers, and a `/healthz` endpoint used by the container `HEALTHCHECK`.
 
 | Build arg | Default | Meaning |
 | --- | --- | --- |

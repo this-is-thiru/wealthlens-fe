@@ -15,7 +15,8 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: '22'
+  # The same major as the developer machines: npm 11 writes package-lock.json, and npm 10 (Node 22) rejects it (FD-009).
+  NODE_VERSION: '24'
   APP_NAME: wealthlens # angular.json -> projects.wealthlens (build output: dist/wealthlens/browser)
   REGISTRY: ghcr.io
 

@@ -3,7 +3,7 @@
 Read it when CHECKPOINT.md points here; write it before every stop.
 
 ```
-Current position : FE-000 DONE (owner "FE-000 approved", 2026-11-15). Next: FE-001 NOT_STARTED, take it with prompt P2
+Current position : FE-000a DONE (owner "FE-000a approved", 2026-11-15). Next: FE-001 NOT_STARTED, take it with prompt P2
 Last updated     : 2026-11-15
 ```
 
@@ -14,6 +14,7 @@ Last updated     : 2026-11-15
 | Item | Status | Date | Note |
 |---|---|---|---|
 | FE-000 | DONE | 2026-11-15 | workflow and gates; owner "FE-000 approved" |
+| FE-000a | DONE | 2026-11-15 | CI and Docker on Node 24; owner "FE-000a approved" |
 | FE-001 | NOT_STARTED | | feature inventory |
 | FE-002 | NOT_STARTED | | brief |
 | FE-003 | NOT_STARTED | | foundations |
@@ -31,6 +32,7 @@ Last updated     : 2026-11-15
 | FD-006 | 2026-11-15 | The 13 `shared/ui` primitives use the selector prefix `ui-`. Is that a violation? | No, it is the design-system convention. ESLint allows `ui-` in `src/app/shared/ui/**` and `app-` elsewhere | owner ("yes to both", 2026-11-15) |
 | FD-007 | 2026-11-15 | An uncommitted `sonar-fixes` edit to `src/app/core/services/transaction.service.ts` (unused imports removed) was carried onto this branch. Keep it? | Keep it in FE-000. The baseline is pruned for it (244 → 242: two `no-unused-vars`), and the file is Prettier-formatted on this first touch (FD-002) | owner ("shrink the baseline") |
 | FD-008 | 2026-11-15 | How does a session read the backend for citations? | `.claude/settings.local.json` `permissions.additionalDirectories` holds the backend checkout path. It is git-ignored, because the path is machine-specific. It takes effect in a session started after it was written | owner ("please take the read access") |
+| FD-009 | 2026-11-15 | CI failed: Node 22's npm 10 `npm ci` rejected the npm 11 lockfile (four entries missing). Regenerate the lockfile with npm 10, or move CI and Docker to Node 24? | Node 24 in CI and Docker, matching the developer machines (v24.13.0). The npm 10 lockfile would break again at the next npm 11 install (944 → 938 entries, measured) | owner ("2") |
 
 ## Blockers
 

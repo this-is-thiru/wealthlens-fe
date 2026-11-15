@@ -90,7 +90,7 @@ They override convenience. Where a check enforces one, the check is named.
 ## Commands
 
 ```bash
-npm ci                    # install (Node 22 in CI)
+npm ci                    # install (Node 24 here, in CI and in Docker; FD-009)
 npm start                 # dev server on http://localhost:4200, API at src/environments/environment.ts
 npm run build             # production build, enforces bundle and style budgets
 npm test                  # Vitest, single run
@@ -118,4 +118,6 @@ npm run plans:check       # a DONE item may not leave an open plan step
   then SonarQube and the Docker image.
 - **The backend checkout** must be readable for citations. Add it once with `/add-dir <path to wealthlens>`, or
   in `.claude/settings.local.json` under `permissions.additionalDirectories` (git-ignored, machine-specific).
+- **One Node major everywhere: 24.** npm 11 (Node 24) leaves out optional entries that npm 10 (Node 22) `npm ci`
+  requires, so a lockfile written on one fails on the other (FD-009). Do not lower `NODE_VERSION` or the Docker base.
 - `.kimchi/docs/` holds notes from earlier work. They are background, not authoritative.
