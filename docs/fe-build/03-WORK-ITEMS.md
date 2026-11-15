@@ -28,6 +28,13 @@ placed with prompt P7 and approved before they are written here.
 - **Verify:** `npx -y npm@10 ci --dry-run` fails on the committed lockfile and npm 11 `npm ci` passes (both pasted);
   `npm run verify && npm run plans:check && npm test && npm run build`; the PR's CI run passes.
 
+### FE-000b — Regenerate the lockfile with npm 11.21, which keeps Tailwind's `@emnapi` entries
+- **Goal:** after FE-000a, CI's `npm ci` (Node 24, npm 11.x) still failed: `@emnapi/core` and `@emnapi/runtime`
+  were missing. npm 11.6.2 on the developer machine drops them, and npm 11.21.2 writes them (FD-010).
+- **Produces:** `package-lock.json`; `CLAUDE.md`.
+- **Verify:** the lockfile has `node_modules/@emnapi/core` and `node_modules/@emnapi/runtime`; `npx npm@11 ci` and
+  npm 11.6.2 `npm ci --dry-run` both pass; `npm run verify && npm test && npm run build`; the PR's CI run passes.
+
 ---
 
 ## Phase 1 — Design foundations (3 items)

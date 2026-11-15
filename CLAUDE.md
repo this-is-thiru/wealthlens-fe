@@ -118,6 +118,8 @@ npm run plans:check       # a DONE item may not leave an open plan step
   then SonarQube and the Docker image.
 - **The backend checkout** must be readable for citations. Add it once with `/add-dir <path to wealthlens>`, or
   in `.claude/settings.local.json` under `permissions.additionalDirectories` (git-ignored, machine-specific).
-- **One Node major everywhere: 24.** npm 11 (Node 24) leaves out optional entries that npm 10 (Node 22) `npm ci`
-  requires, so a lockfile written on one fails on the other (FD-009). Do not lower `NODE_VERSION` or the Docker base.
+- **One Node major everywhere: 24** (FD-009). Do not lower `NODE_VERSION` or the Docker base.
+- **Write `package-lock.json` only with npm 11.21 or later.** Check with `npm -v`, or use `npx npm@11 install …`.
+  npm 11.6.2 leaves out `@emnapi/core` and `@emnapi/runtime`, which Tailwind's WebAssembly fallback
+  (`@tailwindcss/oxide-wasm32-wasi`) needs, and CI's `npm ci` then rejects the lockfile (FD-010).
 - `.kimchi/docs/` holds notes from earlier work. They are background, not authoritative.
