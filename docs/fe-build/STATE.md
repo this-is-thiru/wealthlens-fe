@@ -3,8 +3,8 @@
 Read it when CHECKPOINT.md points here; write it before every stop.
 
 ```
-Current position : FE-000c AWAITING_REVIEW (committed to unblock CI). Then FE-001 with prompt P2
-Last updated     : 2026-11-15
+Current position : FE-001 EXPLAINED, plan awaiting approval. FE-000c still AWAITING_REVIEW (PR 22 merged)
+Last updated     : 2026-11-16
 ```
 
 ## Status board
@@ -17,7 +17,7 @@ Last updated     : 2026-11-15
 | FE-000a | DONE | 2026-11-15 | CI and Docker on Node 24; owner "FE-000a approved" |
 | FE-000b | DONE | 2026-11-15 | lockfile regenerated with npm 11.21.2; owner "fix the pipeline" |
 | FE-000c | AWAITING_REVIEW | 2026-11-15 | Sonar gate; committed and pushed before review to unblock CI, see FD-011 |
-| FE-001 | NOT_STARTED | | feature inventory |
+| FE-001 | EXPLAINED | 2026-11-16 | feature inventory; plan asks which backend ref (recommend 3e1019cf) and one item vs split |
 | FE-002 | NOT_STARTED | | brief |
 | FE-003 | NOT_STARTED | | foundations |
 | FE-004 | NOT_STARTED | | first feature design |
