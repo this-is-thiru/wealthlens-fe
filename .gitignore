@@ -45,6 +45,3 @@ Thumbs.db
 
 # SonarQube scanner
 /.scannerwork
-
-# Claude Code: machine-specific settings (the backend checkout path)
-/.claude/settings.local.json

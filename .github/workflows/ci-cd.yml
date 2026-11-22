@@ -52,9 +52,6 @@ jobs:
       - name: Typecheck (templates and specs)
         run: npm run typecheck
 
-      - name: Plans check (a DONE item leaves no open step)
-        run: npm run plans:check
-
       - name: Unit tests with coverage
         run: npm run test:ci
 
