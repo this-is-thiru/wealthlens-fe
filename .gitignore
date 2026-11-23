@@ -45,3 +45,8 @@ Thumbs.db
 
 # SonarQube scanner
 /.scannerwork
+
+# Local environment files and secrets (never commit)
+.env
+.env.*
+!.env.example

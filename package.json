@@ -15,7 +15,9 @@
     "format:check": "node scripts/check-format.mjs",
     "format:changed": "node scripts/check-format.mjs --write",
     "typecheck": "ngc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
-    "verify": "npm run lint && npm run format:check && npm run typecheck"
+    "verify": "npm run lint && npm run format:check && npm run typecheck",
+    "hooks:install": "node scripts/hooks-install.mjs",
+    "hooks:uninstall": "node scripts/hooks-install.mjs --uninstall"
   },
   "private": true,
   "dependencies": {

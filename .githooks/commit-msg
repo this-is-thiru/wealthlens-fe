@@ -1,0 +1,8 @@
+#!/bin/sh
+# Thin shim: git runs hooks through sh (Git for Windows bundles one), and the real logic lives in
+# Node so it behaves the same on Windows and Linux. Keep LF line endings (see .gitattributes).
+command -v node >/dev/null 2>&1 || {
+  echo "[git-safety] Node.js is required to run the git hooks but was not found on PATH." >&2
+  exit 1
+}
+exec node "$(dirname "$0")/commit-msg.mjs" "$@"
