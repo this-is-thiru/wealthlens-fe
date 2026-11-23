@@ -29,3 +29,8 @@ Thumbs.db
 # Local env overrides (never bake into the image)
 .env
 .env.*
+
+# Not needed to build the image (keeps the build context small)
+.githooks
+.agents
+docs

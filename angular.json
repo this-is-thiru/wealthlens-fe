@@ -80,6 +80,7 @@
             },
             "staging": {
               "optimization": true,
+              "outputHashing": "all",
               "sourceMap": true,
               "fileReplacements": [
                 {

@@ -29,6 +29,6 @@ trigger: always_on
 - Show `git status` and the diff summary before proposing a commit.
 - Conventional Commits: `type(scope): summary` (types: feat, fix, chore, docs, refactor, style, test, ci, build), with the YouTrack ID when there is one, e.g. `feat(portfolio): add holdings table [WL-42]`.
 - Keep commits focused; one logical change per commit.
-- Before proposing a push: build and lint pass locally; Docker build passes if build config changed.
+- Before proposing a push: build, lint, format check, typecheck, and tests pass locally (Node.js/npm/Angular CLI/Git only — **never** require local Docker or ask the user to install/run Docker locally). All Docker builds, smoke tests, and GHCR publishing run exclusively through mandatory GitHub Actions CI checks, verified via GitHub Actions logs/summaries and GHCR.
 - After a push: report the GitHub Actions result and the Sonar quality gate status.
 - If a git command fails or the state is unexpected (wrong branch, conflicts, detached HEAD), stop and tell me. Don't try to fix it with destructive commands.

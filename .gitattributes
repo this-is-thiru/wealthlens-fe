@@ -1,0 +1,4 @@
+# Hooks and shell scripts must keep LF line endings. `sh` fails on CRLF, and
+# Windows checkouts (core.autocrlf=true) would otherwise convert them.
+.githooks/* text eol=lf
+*.sh text eol=lf

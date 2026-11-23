@@ -5,27 +5,69 @@
 //   node scripts/check-format.mjs           check files changed since the merge-base with FORMAT_BASE
 //   node scripts/check-format.mjs --write   format those files in place
 //
-// FORMAT_BASE defaults to origin/master. CI sets it to the PR base or the push's previous commit.
+// FORMAT_BASE defaults to origin/development, falling back to origin/master during branch migration.
+// CI sets it to the PR base or the push's previous commit; an all-zero SHA (new branch push) falls back cleanly.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import * as prettier from 'prettier';
 
 const CHECKED = /\.(ts|html|css|scss|js|mjs)$/;
+const ZERO_SHA = /^0+$/;
+const FALLBACK_BASES = ['origin/development', 'origin/master'];
 const write = process.argv.includes('--write');
-const base = process.env.FORMAT_BASE || 'origin/master';
 
 function git(...args) {
-  return execFileSync('git', args, { encoding: 'utf8' })
+  return execFileSync('git', args, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
     .split('\n')
     .filter(Boolean);
 }
 
-let mergeBase;
-try {
-  [mergeBase] = git('merge-base', 'HEAD', base);
-} catch {
+function tryMergeBase(ref) {
+  try {
+    const [sha] = git('merge-base', 'HEAD', ref);
+    return sha || null;
+  } catch {
+    return null;
+  }
+}
+
+const requested = (process.env.FORMAT_BASE || '').trim();
+const candidates = [];
+if (requested && !ZERO_SHA.test(requested)) {
+  candidates.push(requested);
+} else if (requested && ZERO_SHA.test(requested)) {
+  console.log(
+    `check-format: FORMAT_BASE is all-zeros (new branch push); falling back to ${FALLBACK_BASES.join(' -> ')}.`,
+  );
+}
+for (const fallback of FALLBACK_BASES) {
+  if (!candidates.includes(fallback)) {
+    candidates.push(fallback);
+  }
+}
+
+let base = null;
+let mergeBase = null;
+for (const candidate of candidates) {
+  const found = tryMergeBase(candidate);
+  if (found) {
+    if (requested && !ZERO_SHA.test(requested) && candidate !== requested) {
+      console.log(
+        `check-format: could not resolve '${requested}'; fell back to '${candidate}'.`,
+      );
+    }
+    base = candidate;
+    mergeBase = found;
+    break;
+  }
+}
+
+if (!mergeBase) {
   console.error(
-    `check-format: no merge-base between HEAD and '${base}'. Fetch it, or set FORMAT_BASE.`,
+    `check-format: no merge-base between HEAD and any of [${candidates.join(', ')}]. Fetch the base branch, or set FORMAT_BASE.`,
   );
   process.exit(2);
 }

@@ -46,8 +46,12 @@ jobs:
       - name: Format check (files changed by this PR or push)
         run: npm run format:check
         env:
-          # The PR's base branch, or the commit before this push.
-          FORMAT_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+          # PR base branch, the push's previous commit, or the default branch when a new branch is pushed (before = all zeros).
+          FORMAT_BASE: >-
+            ${{ github.event_name == 'pull_request'
+                && format('origin/{0}', github.base_ref)
+                || (github.event.before != '0000000000000000000000000000000000000000' && github.event.before)
+                || format('origin/{0}', github.event.repository.default_branch) }}
 
       - name: Typecheck (templates and specs)
         run: npm run typecheck
@@ -132,6 +136,10 @@ jobs:
             echo "build_config=production" >> "$GITHUB_OUTPUT"
           elif [ "$GITHUB_BASE_REF" = "release" ]; then
             echo "build_config=production" >> "$GITHUB_OUTPUT" # PR into release: build what will ship
+          elif [ "$GITHUB_REF_NAME" = "staging" ] && [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            echo "build_config=staging" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_BASE_REF" = "staging" ]; then
+            echo "build_config=staging" >> "$GITHUB_OUTPUT" # PR into staging: build staging config
           else
             echo "build_config=development" >> "$GITHUB_OUTPUT"
           fi
