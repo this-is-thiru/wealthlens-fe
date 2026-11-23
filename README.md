@@ -103,7 +103,7 @@ npm run hooks:uninstall   # disables repo hooks
 | Unit tests | `npm run test:ci`; fails on any failing test **or** if coverage is under the thresholds |
 | Coverage summary | Writes a coverage table to the run's summary page |
 | Coverage artifact | Uploads `coverage/` (HTML report, lcov) as the `coverage` artifact, kept 14 days |
-| SonarQube Cloud | Analyses code and coverage (`sonar-project.properties`), then waits for the quality gate; **the run fails if the gate fails**. Skipped for PRs from forks, which can't read secrets. |
+| SonarQube Cloud | Analyses code and coverage (`sonar-project.properties`), then waits for the quality gate; **the run fails if the gate fails**. Runs on all same-repo PRs and pushes to the default/main branch (skipped on fork PRs and non-main branch pushes under the SonarQube Cloud Free plan). |
 
 **2. `docker` job** (only after `test` passes)
 

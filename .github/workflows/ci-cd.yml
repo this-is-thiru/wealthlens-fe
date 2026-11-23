@@ -91,14 +91,16 @@ jobs:
           path: coverage/
           retention-days: 14
 
-      # Secrets aren't available to PRs from forks, so Sonar only runs for
-      # pushes and same-repo PRs. It still runs when coverage thresholds fail,
-      # so the analysis is always up to date (the job fails either way).
+      # Secrets aren't available to PRs from forks, and the SonarQube Cloud Free plan
+      # only allows quality-gate queries on Pull Requests and the repository's default
+      # (main) branch — non-main branch pushes return HTTP 403. It still runs when
+      # coverage thresholds fail, so the analysis is always up to date.
       - name: SonarQube Cloud scan
         if: >-
           ${{ !cancelled()
               && hashFiles('coverage/wealthlens/lcov.info') != ''
-              && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) }}
+              && ((github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)
+                  || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}
         uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -107,7 +109,8 @@ jobs:
         if: >-
           ${{ !cancelled()
               && hashFiles('.scannerwork/report-task.txt') != ''
-              && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) }}
+              && ((github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)
+                  || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}
         uses: SonarSource/sonarqube-quality-gate-action@7a5fffe8e523c40e0c740b6bc2712ab503e52efa # v1.2.1
         timeout-minutes: 5
         env:
