@@ -35,6 +35,8 @@ Run a single spec with `npx ng test --watch=false --include src/app/path/to/file
 
 ## Docker
 
+> **Local development does not require Docker.** All Docker builds, smoke tests, and GHCR publishing run automatically on GitHub Actions (`Docker image` job). Local development and verification use Node.js, npm, Angular CLI, and Git only — verify Docker builds, smoke-test logs, and GHCR tags directly in **Actions → CI/CD** and **Packages → wealthlens-fe** (see [docs/branching-strategy.md](docs/branching-strategy.md)).
+
 The image is a multi-stage build: `node:24-alpine` compiles the app, and `nginxinc/nginx-unprivileged` serves `dist/wealthlens/browser` as a non-root user on **port 8080**. nginx (`nginx.conf`) provides the SPA fallback, gzip, long-lived caching for fingerprinted assets, `no-cache` for `index.html`, security headers, and a `/healthz` endpoint used by the container `HEALTHCHECK`.
 
 | Build arg | Default | Meaning |
@@ -74,16 +76,30 @@ docker run -d --name wealthlens-fe -p 4200:8080 ghcr.io/this-is-thiru/wealthlens
 
 While the package is private, log in first: `echo <PAT with read:packages> | docker login ghcr.io -u <github-user> --password-stdin`.
 
+## Branching & git hooks
+
+Changes flow through pull requests only: `feature/*`, `chore/*`, `fix/*` → `development` → `staging` → `release`. See [docs/branching-strategy.md](docs/branching-strategy.md) for the full promotion policy, migration/rollback runbook, and GitHub/Sonar/GHCR checklists.
+
+Enable the repo's local git hooks (Windows and Linux, zero dependencies) once per clone:
+
+```bash
+npm run hooks:install     # enables pre-commit (lint/format/secrets), commit-msg (Conventional Commits), pre-push (typecheck/test:ci)
+npm run hooks:uninstall   # disables repo hooks
+```
+
 ## CI/CD pipeline
 
-`.github/workflows/ci-cd.yml` runs on pull requests targeting, and pushes to, `master`, `development`, `staging` and `release` (`release` = production). A newer run for the same branch or PR cancels the one in progress.
+- `.github/workflows/ci-cd.yml` runs on pull requests targeting, and pushes to, `master`, `development`, `staging` and `release` (`release` = production). A newer run for the same branch or PR cancels the one in progress.
+- `.github/workflows/pr-policy.yml` (`Promotion policy`) runs on pull requests and rejects invalid branch promotion paths.
 
 **1. `test` job**
 
 | Step | What it does |
 | --- | --- |
-| Install | `npm ci` on Node 22 with the npm cache |
-| Lint | `npm run lint` if a lint script exists (currently skipped) |
+| Install | `npm ci --ignore-scripts` on Node 24 with the npm cache |
+| Lint | `npm run lint` (`eslint src`, against `eslint-suppressions.json`) |
+| Format check | `npm run format:check` (Prettier on changed files; falls back safely on new branch pushes) |
+| Typecheck | `npm run typecheck` (`ngc` + `tsc`) |
 | Unit tests | `npm run test:ci`; fails on any failing test **or** if coverage is under the thresholds |
 | Coverage summary | Writes a coverage table to the run's summary page |
 | Coverage artifact | Uploads `coverage/` (HTML report, lcov) as the `coverage` artifact, kept 14 days |
@@ -96,7 +112,7 @@ While the package is private, log in first: `echo <PAT with read:packages> | doc
 | Pull request | Builds the image and smoke-tests it; nothing is pushed |
 | Push | Builds and smoke-tests, then logs in to ghcr.io with `GITHUB_TOKEN` and pushes (only if the smoke test passed) |
 
-- **Build config:** `production` for `release` (and PRs into `release`), `development` otherwise.
+- **Build config:** `production` for `release` (and PRs into `release`), `staging` for `staging` (and PRs into `staging`), `development` otherwise.
 - **Tags:** `<branch>`, `<branch>-<short sha>`, plus `latest` for `release` pushes only.
 - Layers are cached in the GitHub Actions cache, so rebuilds only redo changed steps.
 
@@ -123,8 +139,8 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 - **Development**: `ng serve`
   - Uses `environment.ts` for configuration.
 
-- **Production Build**: `ng build --prod`
-  - Uses `environment.prod.ts` for configuration.
+- **Production Build**: `ng build --configuration=production`
+  - Uses `environment.production.ts` for configuration.
 
 ## Adding Custom Environment Files
 

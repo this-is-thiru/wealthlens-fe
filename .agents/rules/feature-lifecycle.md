@@ -23,6 +23,7 @@ Phases are the same for both tracks; Phase 1 and Phase 3 differ as described bel
 8. Follow `.agents/rules/git-safety.md` for every git action.
 9. Keep documents, work items, checkpoints and the backlog up to date at all times (see below).
 10. Be concise: tables and bullets, no filler.
+11. **Docker-free local development (permanent):** Never require Docker Desktop, Docker Engine, or any Docker runtime locally, and never ask the user to install Docker or run local `docker` commands. Local development/verification uses Node.js, npm, Angular CLI, and Git only. All Docker builds, smoke tests, and GHCR publishing run exclusively through mandatory GitHub Actions CI checks, verified via GitHub Actions logs/summaries and GHCR.
 
 ## Files
 ```
@@ -97,7 +98,7 @@ Start only after Phases 1–3 are approved.
 3. **Visual consistency is mandatory:** only existing theme tokens, CSS variables, shared components and patterns from `docs/design-system.md`. No hard-coded colours, new fonts, new UI libraries, or restyling of existing components. If something new is truly needed, stop and ask.
 4. Follow existing conventions (standalone vs modules, signals/RxJS, structure, naming, lint). Typed models matching Phase 1 payloads exactly. Handle every planned state.
 5. Don't change shared/global code unless the plan says so.
-6. **Pipeline checks before the gate:** build passes, lint passes, Docker build passes if the Dockerfile or build config changed, and nothing you changed would obviously break the Sonar quality gate.
+6. **Pipeline checks before the gate:** build, lint, format check, typecheck, and `test:ci` pass locally (no local Docker required — Docker builds, smoke tests, and GHCR publishing run exclusively in GitHub Actions as mandatory CI checks), and nothing you changed would obviously break the Sonar quality gate.
 7. `04-implementation-notes.md`: what was built, files created/modified, deviations from plan and why, backend–UI mismatches, limitations, follow-ups, how to run it locally.
 → Gate.
 
