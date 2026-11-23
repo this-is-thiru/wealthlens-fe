@@ -126,12 +126,12 @@ Create three **Active** rulesets (0 required approvals while working solo; raise
 - [ ] At **M7**, add a fourth ruleset on `refs/heads/master`: restrict updates, deletions, and force pushes (read-only lock).
 
 ### 5.3 SonarQube Cloud (`this-is-thiru_wealthlens-fe`)
-- [ ] **Administration → Branches & Pull Requests:** keep `master` as main branch until M7; at M7 rename/switch main branch to `development`.
-- [ ] **Administration → General Settings → Branches:** set long-lived branches pattern to `(development|staging|release|master)`.
-- [ ] **Administration → New Code:** set reference branch to `development` (or *Previous version*).
+> **Free plan note:** SonarQube Cloud Free allows Quality Gate enforcement on **all same-repo Pull Requests** (gating merges into `development`, `staging`, and `release`) and on **pushes to the default/main branch**. Pushes to non-main branches (`staging`, `release`, and `development` until M7) skip the Sonar scan/gate while keeping lint, format, typecheck, tests, Docker build, smoke test, and GHCR push active.
+
+- [ ] **Administration → Branches & Pull Requests:** keep `master` as main branch until M7; at M7 switch main branch to `development` (matches GitHub default branch).
 - [ ] **Quality Gate:** confirm the existing gate remains active.
 - [ ] **Analysis Method:** confirm *Automatic Analysis* stays **disabled** (CI-based via `SONAR_TOKEN`).
-- [ ] After M3, verify `development`, `staging`, and `release` each appear in SonarQube Cloud with a passing quality gate.
+- [ ] Verify every PR targeting `development`, `staging`, and `release` shows a passing SonarQube Cloud Quality Gate check.
 
 ### 5.4 GitHub Container Registry (`ghcr.io/this-is-thiru/wealthlens-fe`)
 - [ ] After M3, open **Packages → wealthlens-fe → Package settings → Manage Actions access** and confirm this repo has **Write** access.
