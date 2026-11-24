@@ -13,7 +13,7 @@ import {
   MergedTransaction,
   HoldingRow,
   PerStockPnl,
-} from '@core/services/portfolio-analytics.service';
+} from '@features/portfolio-analytics/services/portfolio-analytics.service';
 import { ExpansionPanelComponent } from '@shared/components/expansion-panel/expansion-panel.component';
 import { TooltipDirective } from '@shared/directives/tooltip/tooltip.directive';
 import { BadgeComponent } from '@shared/ui/badge/badge.component';
@@ -199,7 +199,11 @@ export class PortfolioAnalyticsComponent implements OnInit {
 
   ngOnInit(): void {
     if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'instant' as ScrollBehavior,
+      });
     }
     this.userEmail = localStorage.getItem('userEmail') || '';
     this.refresh();
@@ -243,7 +247,9 @@ export class PortfolioAnalyticsComponent implements OnInit {
         this.afterLoad();
       },
       error: () => {
-        this.apiHoldings = this.mockApiHoldingsData().map((d) => this.toHoldingRow(d));
+        this.apiHoldings = this.mockApiHoldingsData().map((d) =>
+          this.toHoldingRow(d),
+        );
         this.usingMock = true;
         this.holdingsLoaded = true;
         this.afterLoad();
@@ -267,7 +273,7 @@ export class PortfolioAnalyticsComponent implements OnInit {
       netInvested: totalInvested,
       txnCount:
         (d.buyTransactionIds?.length || 0) +
-        (d.sellTransactionIds?.length || 0) ||
+          (d.sellTransactionIds?.length || 0) ||
         Object.keys(d.transactionQuantities || {}).length,
       avgPrice: d.price || 0,
       totalCharges: (d.brokerCharges || 0) + (d.miscCharges || 0),
@@ -289,7 +295,10 @@ export class PortfolioAnalyticsComponent implements OnInit {
     if (!this.apiHoldings.length) return;
 
     // Share of invested + largest-first order don't depend on transactions
-    const totalAllInvested = this.apiHoldings.reduce((sum, h) => sum + (h.totalInvested || 0), 0);
+    const totalAllInvested = this.apiHoldings.reduce(
+      (sum, h) => sum + (h.totalInvested || 0),
+      0,
+    );
     if (totalAllInvested > 0) {
       for (const h of this.apiHoldings) {
         h.sharePercent = (h.totalInvested / totalAllInvested) * 100;
@@ -311,8 +320,10 @@ export class PortfolioAnalyticsComponent implements OnInit {
       let lastDate = '';
       for (const t of stockTxns) {
         if (t.transactionDate) {
-          if (!firstDate || t.transactionDate < firstDate) firstDate = t.transactionDate;
-          if (!lastDate || t.transactionDate > lastDate) lastDate = t.transactionDate;
+          if (!firstDate || t.transactionDate < firstDate)
+            firstDate = t.transactionDate;
+          if (!lastDate || t.transactionDate > lastDate)
+            lastDate = t.transactionDate;
         }
       }
       h.firstDate = firstDate || 'N/A';
@@ -329,8 +340,12 @@ export class PortfolioAnalyticsComponent implements OnInit {
     this.applyFilters();
   }
 
-  onDateFromChange(): void { this.applyFilters(); }
-  onDateToChange(): void { this.applyFilters(); }
+  onDateFromChange(): void {
+    this.applyFilters();
+  }
+  onDateToChange(): void {
+    this.applyFilters();
+  }
 
   resetFilters(): void {
     this.selectedPreset = 'all';
@@ -356,7 +371,9 @@ export class PortfolioAnalyticsComponent implements OnInit {
 
   applyFilters(): void {
     const { from, to } = this.getDateRange();
-    this.filteredRows = this.portfolioTransactions.filter((r) => this.inDateRange(r.transactionDate, from, to));
+    this.filteredRows = this.portfolioTransactions.filter((r) =>
+      this.inDateRange(r.transactionDate, from, to),
+    );
     this.recompute();
     this.first = 0; // reset pagination when filters change
     this.updateActiveChips();
@@ -373,16 +390,23 @@ export class PortfolioAnalyticsComponent implements OnInit {
     this.totalCharges = stats.totalCharges;
 
     // Capital gains & tax computation
-    this.taxGainsSummary = this.analytics.computeCapitalGainsSummary(this.filteredRows);
+    this.taxGainsSummary = this.analytics.computeCapitalGainsSummary(
+      this.filteredRows,
+    );
     this.realizedPnl = this.taxGainsSummary.totalGain;
-    this.fifoGainsList = this.analytics.computeFifoRealizedGains(this.filteredRows);
+    this.fifoGainsList = this.analytics.computeFifoRealizedGains(
+      this.filteredRows,
+    );
 
     // Holdings + biggest position
     this.holdings = [...this.apiHoldings];
     this.holdingsCount = this.holdings.length;
     this.biggestPosition =
       this.holdings.length > 0
-        ? { name: this.holdings[0].stockName, pct: this.holdings[0].sharePercent }
+        ? {
+            name: this.holdings[0].stockName,
+            pct: this.holdings[0].sharePercent,
+          }
         : null;
 
     // Diversification Metrics
@@ -415,7 +439,7 @@ export class PortfolioAnalyticsComponent implements OnInit {
 
     // Filter holdings tab
     this.availableAssetTypes = Array.from(
-      new Set(this.holdings.map((h) => h.assetType).filter(Boolean))
+      new Set(this.holdings.map((h) => h.assetType).filter(Boolean)),
     ).sort();
     this.applyHoldingsFilters();
   }
@@ -493,7 +517,7 @@ export class PortfolioAnalyticsComponent implements OnInit {
   // Tax calculations
   get stcgTaxEstimate(): number {
     const stcg = this.taxGainsSummary?.stcg || 0;
-    return stcg > 0 ? stcg * 0.20 : 0; // 20% flat STCG rate
+    return stcg > 0 ? stcg * 0.2 : 0; // 20% flat STCG rate
   }
 
   get ltcgTaxEstimate(): number {
@@ -531,8 +555,16 @@ export class PortfolioAnalyticsComponent implements OnInit {
     this.brokerData = {
       labels: brokers.map((b) => b.broker),
       datasets: [
-        { label: 'Buy Value', data: brokers.map((b) => b.buyValue), backgroundColor: '#22C55E' },
-        { label: 'Sell Value', data: brokers.map((b) => b.sellValue), backgroundColor: '#3B82F6' },
+        {
+          label: 'Buy Value',
+          data: brokers.map((b) => b.buyValue),
+          backgroundColor: '#22C55E',
+        },
+        {
+          label: 'Sell Value',
+          data: brokers.map((b) => b.sellValue),
+          backgroundColor: '#3B82F6',
+        },
       ],
     };
   }
@@ -563,7 +595,9 @@ export class PortfolioAnalyticsComponent implements OnInit {
   }
 
   private buildExchangeChart(): void {
-    const exchanges = this.analytics.computeExchangeBreakdown(this.filteredRows);
+    const exchanges = this.analytics.computeExchangeBreakdown(
+      this.filteredRows,
+    );
     this.exchangeData = {
       labels: exchanges.map((e) => e.exchange),
       datasets: [
@@ -632,8 +666,11 @@ export class PortfolioAnalyticsComponent implements OnInit {
         label: `Date: ${this.from || '...'} → ${this.to || '...'}`,
       });
     } else if (this.selectedPreset !== 'all') {
-      const opt = this.datePresetOptions.find((o) => o.value === this.selectedPreset);
-      if (opt) this.activeChips.push({ kind: 'preset', label: `Date: ${opt.label}` });
+      const opt = this.datePresetOptions.find(
+        (o) => o.value === this.selectedPreset,
+      );
+      if (opt)
+        this.activeChips.push({ kind: 'preset', label: `Date: ${opt.label}` });
     }
   }
 
@@ -664,7 +701,10 @@ export class PortfolioAnalyticsComponent implements OnInit {
       id: i,
       rowId: `port-${i}`,
       email: 'test@gmail.com',
-      stockName: i % 2 === 0 ? 'QUANT SMALL CAP FUND - DIRECT' : 'SBI BLUECHIP FUND - DIRECT',
+      stockName:
+        i % 2 === 0
+          ? 'QUANT SMALL CAP FUND - DIRECT'
+          : 'SBI BLUECHIP FUND - DIRECT',
       stockCode: i % 2 === 0 ? 'QUANT_SMALL' : 'SBI_BLUE',
       assetType: 'MUTUAL_FUND',
       exchangeName: i % 3 === 0 ? 'BSE' : 'NSE',
@@ -675,7 +715,7 @@ export class PortfolioAnalyticsComponent implements OnInit {
       totalValue: 1000 + i * 100,
       brokerCharges: 5,
       miscCharges: 2,
-      transactionDate: `2023-${String(((i % 12) + 1)).padStart(2, '0')}-15`,
+      transactionDate: `2023-${String((i % 12) + 1).padStart(2, '0')}-15`,
     }));
   }
 
@@ -702,7 +742,7 @@ export class PortfolioAnalyticsComponent implements OnInit {
         price: 160,
         brokerCharges: 25,
         miscCharges: 15,
-      }
+      },
     ];
   }
 }

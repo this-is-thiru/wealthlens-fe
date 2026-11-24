@@ -25,7 +25,7 @@
       "count": 1
     }
   },
-  "src/app/core/services/broker-charges.service.ts": {
+  "src/app/features/broker-charges/services/broker-charges.service.ts": {
     "@typescript-eslint/no-unused-vars": {
       "count": 3
     }
@@ -55,7 +55,7 @@
       "count": 2
     }
   },
-  "src/app/core/services/portfolio-analytics.service.spec.ts": {
+  "src/app/features/portfolio-analytics/services/portfolio-analytics.service.spec.ts": {
     "@typescript-eslint/array-type": {
       "count": 2
     },
@@ -63,7 +63,7 @@
       "count": 3
     }
   },
-  "src/app/core/services/portfolio-analytics.service.ts": {
+  "src/app/features/portfolio-analytics/services/portfolio-analytics.service.ts": {
     "@typescript-eslint/array-type": {
       "count": 1
     }

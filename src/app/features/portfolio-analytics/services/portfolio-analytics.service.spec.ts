@@ -6,13 +6,15 @@ import { TransactionsResponse } from '@models/transactions-response.model';
 // =============================================================================
 
 /** Small helper to build a TransactionsResponse with sensible defaults. */
-function txn(over: Partial<TransactionsResponse> & {
-  stockCode: string;
-  transactionType: 'BUY' | 'SELL';
-  quantity: number;
-  totalValue: number;
-  transactionDate: string;
-}): TransactionsResponse {
+function txn(
+  over: Partial<TransactionsResponse> & {
+    stockCode: string;
+    transactionType: 'BUY' | 'SELL';
+    quantity: number;
+    totalValue: number;
+    transactionDate: string;
+  },
+): TransactionsResponse {
   return {
     id: over.id ?? Math.floor(Math.random() * 1000000),
     email: over.email ?? 'test@example.com',
@@ -20,7 +22,8 @@ function txn(over: Partial<TransactionsResponse> & {
     assetType: over.assetType ?? 'EQUITY',
     exchangeName: over.exchangeName ?? 'NSE',
     brokerName: over.brokerName ?? 'Zerodha',
-    price: over.price ?? (over.quantity > 0 ? over.totalValue / over.quantity : 0),
+    price:
+      over.price ?? (over.quantity > 0 ? over.totalValue / over.quantity : 0),
     ...over,
   };
 }
@@ -74,13 +77,41 @@ describe('PortfolioAnalyticsService', () => {
 
     it('returns distinct FYs sorted ascending', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'A', transactionType: 'BUY', quantity: 1, totalValue: 1, transactionDate: '2023-06-15' }),
-        txn({ stockCode: 'B', transactionType: 'BUY', quantity: 1, totalValue: 1, transactionDate: '2024-05-15' }),
-        txn({ stockCode: 'C', transactionType: 'BUY', quantity: 1, totalValue: 1, transactionDate: '2022-12-15' }),
+        txn({
+          stockCode: 'A',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 1,
+          transactionDate: '2023-06-15',
+        }),
+        txn({
+          stockCode: 'B',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 1,
+          transactionDate: '2024-05-15',
+        }),
+        txn({
+          stockCode: 'C',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 1,
+          transactionDate: '2022-12-15',
+        }),
         // Duplicate year — should not appear twice.
-        txn({ stockCode: 'D', transactionType: 'BUY', quantity: 1, totalValue: 1, transactionDate: '2023-08-15' }),
+        txn({
+          stockCode: 'D',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 1,
+          transactionDate: '2023-08-15',
+        }),
       ];
-      expect(svc.deriveFinancialYears(rows)).toEqual(['2022-23', '2023-24', '2024-25']);
+      expect(svc.deriveFinancialYears(rows)).toEqual([
+        '2022-23',
+        '2023-24',
+        '2024-25',
+      ]);
     });
   });
 
@@ -88,30 +119,80 @@ describe('PortfolioAnalyticsService', () => {
   // classifyHoldingPeriod
   // ---------------------------------------------------------------------------
   describe('classifyHoldingPeriod', () => {
-    const cases: Array<{ label: string; buy: string; sell: string; asset: string; expected: 'ST' | 'LT' | 'UNKNOWN' }> = [
-      { label: '364 days, EQUITY → ST', buy: '2023-01-15', sell: '2024-01-13', asset: 'EQUITY', expected: 'ST' },
-      { label: '365 days, EQUITY → LT', buy: '2023-01-15', sell: '2024-01-15', asset: 'EQUITY', expected: 'LT' },
-      { label: '730 days, EQUITY → LT', buy: '2023-01-15', sell: '2025-01-15', asset: 'EQUITY', expected: 'LT' },
-      { label: '1000 days, DEBT → ST',  buy: '2023-01-15', sell: '2025-10-15', asset: 'DEBT',   expected: 'ST' },
-      { label: '1100 days, DEBT → LT',  buy: '2023-01-15', sell: '2026-01-15', asset: 'DEBT',   expected: 'LT' },
-      { label: 'same day → ST',          buy: '2024-06-15', sell: '2024-06-15', asset: 'EQUITY', expected: 'ST' },
+    const cases: Array<{
+      label: string;
+      buy: string;
+      sell: string;
+      asset: string;
+      expected: 'ST' | 'LT' | 'UNKNOWN';
+    }> = [
+      {
+        label: '364 days, EQUITY → ST',
+        buy: '2023-01-15',
+        sell: '2024-01-13',
+        asset: 'EQUITY',
+        expected: 'ST',
+      },
+      {
+        label: '365 days, EQUITY → LT',
+        buy: '2023-01-15',
+        sell: '2024-01-15',
+        asset: 'EQUITY',
+        expected: 'LT',
+      },
+      {
+        label: '730 days, EQUITY → LT',
+        buy: '2023-01-15',
+        sell: '2025-01-15',
+        asset: 'EQUITY',
+        expected: 'LT',
+      },
+      {
+        label: '1000 days, DEBT → ST',
+        buy: '2023-01-15',
+        sell: '2025-10-15',
+        asset: 'DEBT',
+        expected: 'ST',
+      },
+      {
+        label: '1100 days, DEBT → LT',
+        buy: '2023-01-15',
+        sell: '2026-01-15',
+        asset: 'DEBT',
+        expected: 'LT',
+      },
+      {
+        label: 'same day → ST',
+        buy: '2024-06-15',
+        sell: '2024-06-15',
+        asset: 'EQUITY',
+        expected: 'ST',
+      },
     ];
     for (const c of cases) {
       it(c.label, () => {
-        expect(svc.classifyHoldingPeriod(c.buy, c.sell, c.asset)).toBe(c.expected);
+        expect(svc.classifyHoldingPeriod(c.buy, c.sell, c.asset)).toBe(
+          c.expected,
+        );
       });
     }
 
     it('returns UNKNOWN when buyDate is missing', () => {
-      expect(svc.classifyHoldingPeriod('', '2024-01-01', 'EQUITY')).toBe('UNKNOWN');
+      expect(svc.classifyHoldingPeriod('', '2024-01-01', 'EQUITY')).toBe(
+        'UNKNOWN',
+      );
     });
 
     it('returns UNKNOWN when sellDate is missing', () => {
-      expect(svc.classifyHoldingPeriod('2023-01-01', '', 'EQUITY')).toBe('UNKNOWN');
+      expect(svc.classifyHoldingPeriod('2023-01-01', '', 'EQUITY')).toBe(
+        'UNKNOWN',
+      );
     });
 
     it('returns UNKNOWN when dates are invalid', () => {
-      expect(svc.classifyHoldingPeriod('not-a-date', '2024-01-01', 'EQUITY')).toBe('UNKNOWN');
+      expect(
+        svc.classifyHoldingPeriod('not-a-date', '2024-01-01', 'EQUITY'),
+      ).toBe('UNKNOWN');
     });
   });
 
@@ -121,8 +202,20 @@ describe('PortfolioAnalyticsService', () => {
   describe('computeFifoRealizedGains', () => {
     it('single BUY → single SELL, matched 1:1', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'AAPL', transactionType: 'BUY',  quantity: 100, totalValue: 10000, transactionDate: '2023-01-01' }),
-        txn({ stockCode: 'AAPL', transactionType: 'SELL', quantity: 100, totalValue: 15000, transactionDate: '2024-01-01' }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'BUY',
+          quantity: 100,
+          totalValue: 10000,
+          transactionDate: '2023-01-01',
+        }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'SELL',
+          quantity: 100,
+          totalValue: 15000,
+          transactionDate: '2024-01-01',
+        }),
       ];
       const gains = svc.computeFifoRealizedGains(rows);
       expect(gains.length).toBe(1);
@@ -140,11 +233,29 @@ describe('PortfolioAnalyticsService', () => {
     it('partial SELL consumes oldest lots first (FIFO)', () => {
       const rows: TransactionsResponse[] = [
         // Day 1:  BUY 50 @ 100
-        txn({ stockCode: 'AAPL', transactionType: 'BUY',  quantity: 50, totalValue: 5000, transactionDate: '2023-01-01' }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'BUY',
+          quantity: 50,
+          totalValue: 5000,
+          transactionDate: '2023-01-01',
+        }),
         // Day 30: BUY 50 @ 200
-        txn({ stockCode: 'AAPL', transactionType: 'BUY',  quantity: 50, totalValue: 10000, transactionDate: '2023-01-30' }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'BUY',
+          quantity: 50,
+          totalValue: 10000,
+          transactionDate: '2023-01-30',
+        }),
         // Day 60: SELL 60 @ 250 — consumes all 50 from day 1 + 10 from day 30
-        txn({ stockCode: 'AAPL', transactionType: 'SELL', quantity: 60, totalValue: 15000, transactionDate: '2023-03-01' }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'SELL',
+          quantity: 60,
+          totalValue: 15000,
+          transactionDate: '2023-03-01',
+        }),
       ];
       const gains = svc.computeFifoRealizedGains(rows);
       expect(gains.length).toBe(2);
@@ -168,7 +279,13 @@ describe('PortfolioAnalyticsService', () => {
 
     it('SELL before any BUY produces a short-sell record', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'TSLA', transactionType: 'SELL', quantity: 10, totalValue: 2000, transactionDate: '2024-01-01' }),
+        txn({
+          stockCode: 'TSLA',
+          transactionType: 'SELL',
+          quantity: 10,
+          totalValue: 2000,
+          transactionDate: '2024-01-01',
+        }),
       ];
       const gains = svc.computeFifoRealizedGains(rows);
       expect(gains.length).toBe(1);
@@ -181,9 +298,21 @@ describe('PortfolioAnalyticsService', () => {
 
     it('SELL exceeding available BUY lot quantity → consumed + short-sell residual', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'AAPL', transactionType: 'BUY',  quantity: 30, totalValue: 3000, transactionDate: '2023-01-01' }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'BUY',
+          quantity: 30,
+          totalValue: 3000,
+          transactionDate: '2023-01-01',
+        }),
         // Sell 50 when only 30 available.
-        txn({ stockCode: 'AAPL', transactionType: 'SELL', quantity: 50, totalValue: 10000, transactionDate: '2023-06-01' }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'SELL',
+          quantity: 50,
+          totalValue: 10000,
+          transactionDate: '2023-06-01',
+        }),
       ];
       const gains = svc.computeFifoRealizedGains(rows);
       expect(gains.length).toBe(2);
@@ -210,11 +339,35 @@ describe('PortfolioAnalyticsService', () => {
     it('FIFO processes stocks independently', () => {
       const rows: TransactionsResponse[] = [
         // Stock A
-        txn({ stockCode: 'AAA', transactionType: 'BUY',  quantity: 10, totalValue: 1000, transactionDate: '2023-01-01' }),
-        txn({ stockCode: 'AAA', transactionType: 'SELL', quantity: 10, totalValue: 2000, transactionDate: '2023-06-01' }),
+        txn({
+          stockCode: 'AAA',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2023-01-01',
+        }),
+        txn({
+          stockCode: 'AAA',
+          transactionType: 'SELL',
+          quantity: 10,
+          totalValue: 2000,
+          transactionDate: '2023-06-01',
+        }),
         // Stock B
-        txn({ stockCode: 'BBB', transactionType: 'BUY',  quantity: 5,  totalValue: 500,  transactionDate: '2023-02-01' }),
-        txn({ stockCode: 'BBB', transactionType: 'SELL', quantity: 5,  totalValue: 1500, transactionDate: '2023-07-01' }),
+        txn({
+          stockCode: 'BBB',
+          transactionType: 'BUY',
+          quantity: 5,
+          totalValue: 500,
+          transactionDate: '2023-02-01',
+        }),
+        txn({
+          stockCode: 'BBB',
+          transactionType: 'SELL',
+          quantity: 5,
+          totalValue: 1500,
+          transactionDate: '2023-07-01',
+        }),
       ];
       const gains = svc.computeFifoRealizedGains(rows);
       expect(gains.length).toBe(2);
@@ -248,14 +401,28 @@ describe('PortfolioAnalyticsService', () => {
 
     it('single BUY+SELL pair: totalGain = sellValue − buyValue', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'AAPL', transactionType: 'BUY',  quantity: 100, totalValue: 10000, transactionDate: '2023-01-01',
-              brokerCharges: 10, miscCharges: 5 }),
-        txn({ stockCode: 'AAPL', transactionType: 'SELL', quantity: 100, totalValue: 15000, transactionDate: '2024-01-01',
-              brokerCharges: 8,  miscCharges: 2 }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'BUY',
+          quantity: 100,
+          totalValue: 10000,
+          transactionDate: '2023-01-01',
+          brokerCharges: 10,
+          miscCharges: 5,
+        }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'SELL',
+          quantity: 100,
+          totalValue: 15000,
+          transactionDate: '2024-01-01',
+          brokerCharges: 8,
+          miscCharges: 2,
+        }),
       ];
       const s = svc.computeCapitalGainsSummary(rows);
       expect(s.totalGain).toBe(5000);
-      expect(s.ltcg).toBe(5000);   // 12 months exactly → LT
+      expect(s.ltcg).toBe(5000); // 12 months exactly → LT
       expect(s.stcg).toBe(0);
       expect(s.totalSellValue).toBe(15000);
       expect(s.totalCharges).toBe(25); // 10+5 + 8+2
@@ -264,11 +431,39 @@ describe('PortfolioAnalyticsService', () => {
     it('multi-stock mix: byFy and byAssetType group correctly', () => {
       const rows: TransactionsResponse[] = [
         // Stock A: EQUITY, FY 2023-24 (sell 2024-01-01 is in FY 2023-24)
-        txn({ stockCode: 'AAA', assetType: 'EQUITY', transactionType: 'BUY',  quantity: 10, totalValue: 1000, transactionDate: '2023-01-01' }),
-        txn({ stockCode: 'AAA', assetType: 'EQUITY', transactionType: 'SELL', quantity: 10, totalValue: 2000, transactionDate: '2024-01-01' }),
+        txn({
+          stockCode: 'AAA',
+          assetType: 'EQUITY',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2023-01-01',
+        }),
+        txn({
+          stockCode: 'AAA',
+          assetType: 'EQUITY',
+          transactionType: 'SELL',
+          quantity: 10,
+          totalValue: 2000,
+          transactionDate: '2024-01-01',
+        }),
         // Stock B: MUTUAL_FUND, FY 2024-25 (sell 2024-08-01)
-        txn({ stockCode: 'BBB', assetType: 'MUTUAL_FUND', transactionType: 'BUY',  quantity: 5, totalValue: 500, transactionDate: '2024-02-01' }),
-        txn({ stockCode: 'BBB', assetType: 'MUTUAL_FUND', transactionType: 'SELL', quantity: 5, totalValue: 1500, transactionDate: '2024-08-01' }),
+        txn({
+          stockCode: 'BBB',
+          assetType: 'MUTUAL_FUND',
+          transactionType: 'BUY',
+          quantity: 5,
+          totalValue: 500,
+          transactionDate: '2024-02-01',
+        }),
+        txn({
+          stockCode: 'BBB',
+          assetType: 'MUTUAL_FUND',
+          transactionType: 'SELL',
+          quantity: 5,
+          totalValue: 1500,
+          transactionDate: '2024-08-01',
+        }),
       ];
       const s = svc.computeCapitalGainsSummary(rows);
       expect(s.totalGain).toBe(1000 + 1000);
@@ -282,10 +477,34 @@ describe('PortfolioAnalyticsService', () => {
 
     it('with fy filter: only that FY contributes', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'AAA', transactionType: 'BUY',  quantity: 10, totalValue: 1000, transactionDate: '2023-01-01' }),
-        txn({ stockCode: 'AAA', transactionType: 'SELL', quantity: 10, totalValue: 2000, transactionDate: '2024-01-01' }), // FY 2023-24
-        txn({ stockCode: 'BBB', transactionType: 'BUY',  quantity: 5,  totalValue: 500,  transactionDate: '2024-02-01' }),
-        txn({ stockCode: 'BBB', transactionType: 'SELL', quantity: 5,  totalValue: 1500, transactionDate: '2024-08-01' }), // FY 2024-25
+        txn({
+          stockCode: 'AAA',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2023-01-01',
+        }),
+        txn({
+          stockCode: 'AAA',
+          transactionType: 'SELL',
+          quantity: 10,
+          totalValue: 2000,
+          transactionDate: '2024-01-01',
+        }), // FY 2023-24
+        txn({
+          stockCode: 'BBB',
+          transactionType: 'BUY',
+          quantity: 5,
+          totalValue: 500,
+          transactionDate: '2024-02-01',
+        }),
+        txn({
+          stockCode: 'BBB',
+          transactionType: 'SELL',
+          quantity: 5,
+          totalValue: 1500,
+          transactionDate: '2024-08-01',
+        }), // FY 2024-25
       ];
       const only23 = svc.computeCapitalGainsSummary(rows, '2023-24');
       expect(only23.totalGain).toBe(1000);
@@ -309,9 +528,30 @@ describe('PortfolioAnalyticsService', () => {
 
     it('3 BUYs across 2 asset types → 2 slices, percentages ≈ 100', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'A', assetType: 'EQUITY', transactionType: 'BUY', quantity: 1, totalValue: 10000, transactionDate: '2023-01-01' }),
-        txn({ stockCode: 'B', assetType: 'EQUITY', transactionType: 'BUY', quantity: 1, totalValue: 5000,  transactionDate: '2023-02-01' }),
-        txn({ stockCode: 'C', assetType: 'DEBT',   transactionType: 'BUY', quantity: 1, totalValue: 15000, transactionDate: '2023-03-01' }),
+        txn({
+          stockCode: 'A',
+          assetType: 'EQUITY',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 10000,
+          transactionDate: '2023-01-01',
+        }),
+        txn({
+          stockCode: 'B',
+          assetType: 'EQUITY',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 5000,
+          transactionDate: '2023-02-01',
+        }),
+        txn({
+          stockCode: 'C',
+          assetType: 'DEBT',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 15000,
+          transactionDate: '2023-03-01',
+        }),
       ];
       const slices = svc.computeAssetAllocation(rows);
       expect(slices.length).toBe(2);
@@ -328,8 +568,22 @@ describe('PortfolioAnalyticsService', () => {
 
     it('SELL transactions do not contribute to allocation', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'A', assetType: 'EQUITY', transactionType: 'BUY',  quantity: 1, totalValue: 1000, transactionDate: '2023-01-01' }),
-        txn({ stockCode: 'A', assetType: 'EQUITY', transactionType: 'SELL', quantity: 1, totalValue: 5000, transactionDate: '2023-02-01' }),
+        txn({
+          stockCode: 'A',
+          assetType: 'EQUITY',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 1000,
+          transactionDate: '2023-01-01',
+        }),
+        txn({
+          stockCode: 'A',
+          assetType: 'EQUITY',
+          transactionType: 'SELL',
+          quantity: 1,
+          totalValue: 5000,
+          transactionDate: '2023-02-01',
+        }),
       ];
       const slices = svc.computeAssetAllocation(rows);
       expect(slices.length).toBe(1);
@@ -348,9 +602,27 @@ describe('PortfolioAnalyticsService', () => {
     it('3 months of activity → 3 entries sorted ascending', () => {
       const rows: TransactionsResponse[] = [
         // March — listed first intentionally to test sorting.
-        txn({ stockCode: 'A', transactionType: 'BUY',  quantity: 1, totalValue: 500, transactionDate: '2023-03-15' }),
-        txn({ stockCode: 'B', transactionType: 'BUY',  quantity: 1, totalValue: 1000, transactionDate: '2023-01-15' }),
-        txn({ stockCode: 'C', transactionType: 'SELL', quantity: 1, totalValue: 2000, transactionDate: '2023-02-15' }),
+        txn({
+          stockCode: 'A',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 500,
+          transactionDate: '2023-03-15',
+        }),
+        txn({
+          stockCode: 'B',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 1000,
+          transactionDate: '2023-01-15',
+        }),
+        txn({
+          stockCode: 'C',
+          transactionType: 'SELL',
+          quantity: 1,
+          totalValue: 2000,
+          transactionDate: '2023-02-15',
+        }),
       ];
       const m = svc.computeMonthlyActivity(rows);
       expect(m.length).toBe(3);
@@ -365,9 +637,27 @@ describe('PortfolioAnalyticsService', () => {
 
     it('multiple transactions in same month are bucketed together', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'A', transactionType: 'BUY',  quantity: 1, totalValue: 1000, transactionDate: '2023-02-15' }),
-        txn({ stockCode: 'B', transactionType: 'SELL', quantity: 1, totalValue: 2000, transactionDate: '2023-02-20' }),
-        txn({ stockCode: 'C', transactionType: 'BUY',  quantity: 1, totalValue: 500,  transactionDate: '2023-02-25' }),
+        txn({
+          stockCode: 'A',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 1000,
+          transactionDate: '2023-02-15',
+        }),
+        txn({
+          stockCode: 'B',
+          transactionType: 'SELL',
+          quantity: 1,
+          totalValue: 2000,
+          transactionDate: '2023-02-20',
+        }),
+        txn({
+          stockCode: 'C',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 500,
+          transactionDate: '2023-02-25',
+        }),
       ];
       const m = svc.computeMonthlyActivity(rows);
       expect(m.length).toBe(1);
@@ -389,11 +679,29 @@ describe('PortfolioAnalyticsService', () => {
 
     it('tags every row with _source correctly', () => {
       const temp: TransactionsResponse[] = [
-        txn({ stockCode: 'TEMP1', transactionType: 'BUY', quantity: 1, totalValue: 1, transactionDate: '2023-01-01' }),
+        txn({
+          stockCode: 'TEMP1',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 1,
+          transactionDate: '2023-01-01',
+        }),
       ];
       const portfolio: TransactionsResponse[] = [
-        txn({ stockCode: 'PORT1', transactionType: 'BUY', quantity: 1, totalValue: 1, transactionDate: '2023-02-01' }),
-        txn({ stockCode: 'PORT2', transactionType: 'BUY', quantity: 1, totalValue: 1, transactionDate: '2023-03-01' }),
+        txn({
+          stockCode: 'PORT1',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 1,
+          transactionDate: '2023-02-01',
+        }),
+        txn({
+          stockCode: 'PORT2',
+          transactionType: 'BUY',
+          quantity: 1,
+          totalValue: 1,
+          transactionDate: '2023-03-01',
+        }),
       ];
       const merged = svc.mergeTransactions(temp, portfolio);
       expect(merged.length).toBe(3);
@@ -406,8 +714,20 @@ describe('PortfolioAnalyticsService', () => {
     });
 
     it('does NOT mutate the input arrays', () => {
-      const tempRow = txn({ stockCode: 'TEMP1', transactionType: 'BUY', quantity: 1, totalValue: 1, transactionDate: '2023-01-01' });
-      const portRow = txn({ stockCode: 'PORT1', transactionType: 'BUY', quantity: 1, totalValue: 1, transactionDate: '2023-02-01' });
+      const tempRow = txn({
+        stockCode: 'TEMP1',
+        transactionType: 'BUY',
+        quantity: 1,
+        totalValue: 1,
+        transactionDate: '2023-01-01',
+      });
+      const portRow = txn({
+        stockCode: 'PORT1',
+        transactionType: 'BUY',
+        quantity: 1,
+        totalValue: 1,
+        transactionDate: '2023-02-01',
+      });
       const temp = [tempRow];
       const portfolio = [portRow];
       svc.mergeTransactions(temp, portfolio);
@@ -433,9 +753,36 @@ describe('PortfolioAnalyticsService', () => {
 
     it('non-empty input: counts BUYs, SELLs, charges, topStock', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'AAPL', stockName: 'Apple', transactionType: 'BUY',  quantity: 10, totalValue: 1000, transactionDate: '2023-01-01', brokerCharges: 5, miscCharges: 2 }),
-        txn({ stockCode: 'AAPL', stockName: 'Apple', transactionType: 'BUY',  quantity: 5,  totalValue: 800,  transactionDate: '2023-01-15', brokerCharges: 3, miscCharges: 0 }),
-        txn({ stockCode: 'AAPL', stockName: 'Apple', transactionType: 'SELL', quantity: 5,  totalValue: 1000, transactionDate: '2023-02-01', brokerCharges: 4, miscCharges: 1 }),
+        txn({
+          stockCode: 'AAPL',
+          stockName: 'Apple',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2023-01-01',
+          brokerCharges: 5,
+          miscCharges: 2,
+        }),
+        txn({
+          stockCode: 'AAPL',
+          stockName: 'Apple',
+          transactionType: 'BUY',
+          quantity: 5,
+          totalValue: 800,
+          transactionDate: '2023-01-15',
+          brokerCharges: 3,
+          miscCharges: 0,
+        }),
+        txn({
+          stockCode: 'AAPL',
+          stockName: 'Apple',
+          transactionType: 'SELL',
+          quantity: 5,
+          totalValue: 1000,
+          transactionDate: '2023-02-01',
+          brokerCharges: 4,
+          miscCharges: 1,
+        }),
       ];
       const s = svc.computeStats(rows);
       expect(s.count).toBe(3);
@@ -456,8 +803,20 @@ describe('PortfolioAnalyticsService', () => {
 
     it('non-empty input: netHeld, avgPrice, sharePercent computed', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'AAPL', transactionType: 'BUY',  quantity: 10, totalValue: 1000, transactionDate: '2023-01-01' }),
-        txn({ stockCode: 'AAPL', transactionType: 'SELL', quantity: 3,  totalValue: 600,  transactionDate: '2023-02-01' }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2023-01-01',
+        }),
+        txn({
+          stockCode: 'AAPL',
+          transactionType: 'SELL',
+          quantity: 3,
+          totalValue: 600,
+          transactionDate: '2023-02-01',
+        }),
       ];
       const h = svc.computeHoldings(rows);
       expect(h.length).toBe(1);
@@ -481,9 +840,33 @@ describe('PortfolioAnalyticsService', () => {
 
     it('non-empty input: returns several insights with tones', () => {
       const rows: TransactionsResponse[] = [
-        txn({ stockCode: 'AAPL', brokerName: 'Zerodha', assetType: 'EQUITY', transactionType: 'BUY', quantity: 10, totalValue: 1000, transactionDate: '2023-01-01' }),
-        txn({ stockCode: 'GOOG',  brokerName: 'Zerodha', assetType: 'EQUITY', transactionType: 'BUY', quantity: 5,  totalValue: 500,  transactionDate: '2023-01-15' }),
-        txn({ stockCode: 'AAPL', brokerName: 'Zerodha', assetType: 'EQUITY', transactionType: 'SELL', quantity: 3, totalValue: 600, transactionDate: '2023-02-01' }),
+        txn({
+          stockCode: 'AAPL',
+          brokerName: 'Zerodha',
+          assetType: 'EQUITY',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2023-01-01',
+        }),
+        txn({
+          stockCode: 'GOOG',
+          brokerName: 'Zerodha',
+          assetType: 'EQUITY',
+          transactionType: 'BUY',
+          quantity: 5,
+          totalValue: 500,
+          transactionDate: '2023-01-15',
+        }),
+        txn({
+          stockCode: 'AAPL',
+          brokerName: 'Zerodha',
+          assetType: 'EQUITY',
+          transactionType: 'SELL',
+          quantity: 3,
+          totalValue: 600,
+          transactionDate: '2023-02-01',
+        }),
       ];
       const s = svc.computeStats(rows);
       const insights = svc.computeInsights(rows, s);
@@ -561,18 +944,46 @@ describe('PortfolioAnalyticsService', () => {
     it('correctly groups realized gains by period and asset type', () => {
       const rows: TransactionsResponse[] = [
         // AAPL (EQUITY) -> STCG 111A (Row 0)
-        txn({ stockCode: 'AAPL', assetType: 'EQUITY', transactionType: 'BUY', quantity: 10, totalValue: 1000, transactionDate: '2023-04-10' }),
+        txn({
+          stockCode: 'AAPL',
+          assetType: 'EQUITY',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2023-04-10',
+        }),
         // Sell 5 AAPL on May 12 (Period 0). Cost: 500, Sell: 750, Gain: 250
-        txn({ stockCode: 'AAPL', assetType: 'EQUITY', transactionType: 'SELL', quantity: 5, totalValue: 750, transactionDate: '2023-05-12' }),
-        
+        txn({
+          stockCode: 'AAPL',
+          assetType: 'EQUITY',
+          transactionType: 'SELL',
+          quantity: 5,
+          totalValue: 750,
+          transactionDate: '2023-05-12',
+        }),
+
         // DEBT_MF (DEBT) -> LTCG 20% Section 112 (Row 4)
-        txn({ stockCode: 'DEBT_MF', assetType: 'DEBT', transactionType: 'BUY', quantity: 100, totalValue: 10000, transactionDate: '2020-04-01' }),
+        txn({
+          stockCode: 'DEBT_MF',
+          assetType: 'DEBT',
+          transactionType: 'BUY',
+          quantity: 100,
+          totalValue: 10000,
+          transactionDate: '2020-04-01',
+        }),
         // Sell 100 DEBT_MF on July 10, 2023 (Period 1, >3 years). Cost: 10000, Sell: 15000, Gain: 5000
-        txn({ stockCode: 'DEBT_MF', assetType: 'DEBT', transactionType: 'SELL', quantity: 100, totalValue: 15000, transactionDate: '2023-07-10' }),
+        txn({
+          stockCode: 'DEBT_MF',
+          assetType: 'DEBT',
+          transactionType: 'SELL',
+          quantity: 100,
+          totalValue: 15000,
+          transactionDate: '2023-07-10',
+        }),
       ];
 
       const accrual = svc.computeAccrualSummary(rows, '2023-24');
-      
+
       // Verify row 0 (STCG 111A) has 250 in period 0
       expect(accrual[0].periods[0]).toBe(250);
       expect(accrual[0].periods[1]).toBe(0);
