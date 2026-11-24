@@ -23,7 +23,12 @@ export interface SummaryStats {
   totalSold: number;
   netInvested: number;
   totalCharges: number;
-  topStock: { name: string; code: string; count: number; totalValue: number } | null;
+  topStock: {
+    name: string;
+    code: string;
+    count: number;
+    totalValue: number;
+  } | null;
 }
 
 export interface HoldingRow {
@@ -194,7 +199,7 @@ export class PortfolioAnalyticsService {
    */
   mergeTransactions(
     temp: TransactionsResponse[],
-    portfolio: TransactionsResponse[]
+    portfolio: TransactionsResponse[],
   ): MergedTransaction[] {
     const tagged: MergedTransaction[] = [];
     if (temp?.length) {
@@ -215,11 +220,17 @@ export class PortfolioAnalyticsService {
     let totalInvested = 0;
     let totalSold = 0;
     let totalCharges = 0;
-    const stockCounts = new Map<string, { name: string; code: string; count: number; totalValue: number }>();
+    const stockCounts = new Map<
+      string,
+      { name: string; code: string; count: number; totalValue: number }
+    >();
     for (const r of rows) {
-      totalCharges += this.safeNum(r.brokerCharges) + this.safeNum(r.miscCharges);
-      if (r.transactionType === 'BUY') totalInvested += this.safeNum(r.totalValue);
-      else if (r.transactionType === 'SELL') totalSold += this.safeNum(r.totalValue);
+      totalCharges +=
+        this.safeNum(r.brokerCharges) + this.safeNum(r.miscCharges);
+      if (r.transactionType === 'BUY')
+        totalInvested += this.safeNum(r.totalValue);
+      else if (r.transactionType === 'SELL')
+        totalSold += this.safeNum(r.totalValue);
       const key = r.stockCode || r.stockName || 'unknown';
       const existing = stockCounts.get(key);
       if (existing) {
@@ -290,10 +301,13 @@ export class PortfolioAnalyticsService {
       }
       h.netHeld = h.totalBought - h.totalSold;
       h.netInvested = h.totalInvested - h.totalSoldValue;
-      h.totalCharges += this.safeNum(r.brokerCharges) + this.safeNum(r.miscCharges);
+      h.totalCharges +=
+        this.safeNum(r.brokerCharges) + this.safeNum(r.miscCharges);
       if (r.transactionDate) {
-        if (!h.firstDate || r.transactionDate < h.firstDate) h.firstDate = r.transactionDate;
-        if (!h.lastDate || r.transactionDate > h.lastDate) h.lastDate = r.transactionDate;
+        if (!h.firstDate || r.transactionDate < h.firstDate)
+          h.firstDate = r.transactionDate;
+        if (!h.lastDate || r.transactionDate > h.lastDate)
+          h.lastDate = r.transactionDate;
       }
       if (r.transactionType === 'BUY') {
         totalAllInvested += value;
@@ -301,32 +315,50 @@ export class PortfolioAnalyticsService {
     }
     for (const h of map.values()) {
       h.avgPrice = h.totalBought > 0 ? h.totalInvested / h.totalBought : 0;
-      h.sharePercent = totalAllInvested > 0 ? (h.totalInvested / totalAllInvested) * 100 : 0;
+      h.sharePercent =
+        totalAllInvested > 0 ? (h.totalInvested / totalAllInvested) * 100 : 0;
     }
-    return Array.from(map.values()).sort((a, b) => b.totalInvested - a.totalInvested);
+    return Array.from(map.values()).sort(
+      (a, b) => b.totalInvested - a.totalInvested,
+    );
   }
 
   // ---------------------------------------------------------------------------
   // computeInsights
   // ---------------------------------------------------------------------------
 
-  computeInsights(rows: TransactionsResponse[], stats: SummaryStats): InsightItem[] {
+  computeInsights(
+    rows: TransactionsResponse[],
+    stats: SummaryStats,
+  ): InsightItem[] {
     const out: InsightItem[] = [];
     if (rows.length === 0) return out;
 
     // Biggest broker by transaction count
-    const brokerCounts = new Map<string, { count: number; totalValue: number }>();
+    const brokerCounts = new Map<
+      string,
+      { count: number; totalValue: number }
+    >();
     for (const r of rows) {
       const key = r.brokerName || 'Unknown';
       const existing = brokerCounts.get(key);
       if (existing) {
         existing.count += 1;
         existing.totalValue += this.safeNum(r.totalValue);
-      } else brokerCounts.set(key, { count: 1, totalValue: this.safeNum(r.totalValue) });
+      } else
+        brokerCounts.set(key, {
+          count: 1,
+          totalValue: this.safeNum(r.totalValue),
+        });
     }
-    let biggestBroker: { name: string; count: number; totalValue: number } | null = null;
+    let biggestBroker: {
+      name: string;
+      count: number;
+      totalValue: number;
+    } | null = null;
     for (const [name, v] of brokerCounts.entries()) {
-      if (!biggestBroker || v.count > biggestBroker.count) biggestBroker = { name, ...v };
+      if (!biggestBroker || v.count > biggestBroker.count)
+        biggestBroker = { name, ...v };
     }
     if (biggestBroker) {
       out.push({
@@ -348,11 +380,16 @@ export class PortfolioAnalyticsService {
     for (const r of rows) {
       if (!r.transactionDate) continue;
       const d = new Date(r.transactionDate);
-      if (d.getMonth() === thisMonth && d.getFullYear() === thisYear) thisCount++;
-      else if (d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear) lastCount++;
+      if (d.getMonth() === thisMonth && d.getFullYear() === thisYear)
+        thisCount++;
+      else if (d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear)
+        lastCount++;
     }
     if (thisCount > 0 || lastCount > 0) {
-      const diff = lastCount === 0 ? 100 : Math.round(((thisCount - lastCount) / lastCount) * 100);
+      const diff =
+        lastCount === 0
+          ? 100
+          : Math.round(((thisCount - lastCount) / lastCount) * 100);
       const arrow = thisCount >= lastCount ? '▲' : '▼';
       const sign = diff >= 0 ? '+' : '';
       out.push({
@@ -379,20 +416,33 @@ export class PortfolioAnalyticsService {
     }
 
     // Top asset type by total value
-    const assetCounts = new Map<string, { count: number; totalValue: number }>();
+    const assetCounts = new Map<
+      string,
+      { count: number; totalValue: number }
+    >();
     for (const r of rows) {
       const key = r.assetType || 'Unknown';
       const existing = assetCounts.get(key);
       if (existing) {
         existing.count += 1;
         existing.totalValue += this.safeNum(r.totalValue);
-      } else assetCounts.set(key, { count: 1, totalValue: this.safeNum(r.totalValue) });
+      } else
+        assetCounts.set(key, {
+          count: 1,
+          totalValue: this.safeNum(r.totalValue),
+        });
     }
     const totalValue = rows.reduce((s, r) => s + this.safeNum(r.totalValue), 0);
-    let topAsset: { name: string; count: number; totalValue: number; pct: number } | null = null;
+    let topAsset: {
+      name: string;
+      count: number;
+      totalValue: number;
+      pct: number;
+    } | null = null;
     for (const [name, v] of assetCounts.entries()) {
       const pct = totalValue > 0 ? (v.totalValue / totalValue) * 100 : 0;
-      if (!topAsset || v.totalValue > topAsset.totalValue) topAsset = { name, ...v, pct };
+      if (!topAsset || v.totalValue > topAsset.totalValue)
+        topAsset = { name, ...v, pct };
     }
     if (topAsset) {
       out.push({
@@ -499,12 +549,13 @@ export class PortfolioAnalyticsService {
   classifyHoldingPeriod(
     buyDateIso: string,
     sellDateIso: string,
-    assetType: string
+    assetType: string,
   ): 'ST' | 'LT' | 'UNKNOWN' {
     if (!buyDateIso || !sellDateIso) return 'UNKNOWN';
     const buy = new Date(buyDateIso);
     const sell = new Date(sellDateIso);
-    if (Number.isNaN(buy.getTime()) || Number.isNaN(sell.getTime())) return 'UNKNOWN';
+    if (Number.isNaN(buy.getTime()) || Number.isNaN(sell.getTime()))
+      return 'UNKNOWN';
 
     let months =
       (sell.getFullYear() - buy.getFullYear()) * 12 +
@@ -604,7 +655,7 @@ export class PortfolioAnalyticsService {
               holdingPeriod: this.classifyHoldingPeriod(
                 lot.buyDate,
                 sellDate,
-                lot.assetType
+                lot.assetType,
               ),
               financialYear: fy,
             });
@@ -650,7 +701,7 @@ export class PortfolioAnalyticsService {
    */
   computeCapitalGainsSummary(
     rows: TransactionsResponse[],
-    fy?: string
+    fy?: string,
   ): CapitalGainsSummary {
     let inScope: TransactionsResponse[];
     if (fy) {
@@ -684,7 +735,8 @@ export class PortfolioAnalyticsService {
     // the app reports charges per FY.
     let totalCharges = 0;
     for (const r of inScope) {
-      totalCharges += this.safeNum(r.brokerCharges) + this.safeNum(r.miscCharges);
+      totalCharges +=
+        this.safeNum(r.brokerCharges) + this.safeNum(r.miscCharges);
     }
 
     // byFy
@@ -692,7 +744,14 @@ export class PortfolioAnalyticsService {
     for (const g of gains) {
       let e = byFyMap.get(g.financialYear);
       if (!e) {
-        e = { financialYear: g.financialYear, sellValue: 0, gain: 0, stcg: 0, ltcg: 0, count: 0 };
+        e = {
+          financialYear: g.financialYear,
+          sellValue: 0,
+          gain: 0,
+          stcg: 0,
+          ltcg: 0,
+          count: 0,
+        };
         byFyMap.set(g.financialYear, e);
       }
       e.sellValue += g.sellValue;
@@ -702,7 +761,11 @@ export class PortfolioAnalyticsService {
       else if (g.holdingPeriod === 'LT') e.ltcg += g.gain;
     }
     const byFy = Array.from(byFyMap.values()).sort((a, b) =>
-      a.financialYear < b.financialYear ? -1 : a.financialYear > b.financialYear ? 1 : 0
+      a.financialYear < b.financialYear
+        ? -1
+        : a.financialYear > b.financialYear
+          ? 1
+          : 0,
     );
 
     // byAssetType
@@ -710,7 +773,14 @@ export class PortfolioAnalyticsService {
     for (const g of gains) {
       let e = byAssetMap.get(g.assetType);
       if (!e) {
-        e = { assetType: g.assetType, sellValue: 0, gain: 0, stcg: 0, ltcg: 0, count: 0 };
+        e = {
+          assetType: g.assetType,
+          sellValue: 0,
+          gain: 0,
+          stcg: 0,
+          ltcg: 0,
+          count: 0,
+        };
         byAssetMap.set(g.assetType, e);
       }
       e.sellValue += g.sellValue;
@@ -720,10 +790,18 @@ export class PortfolioAnalyticsService {
       else if (g.holdingPeriod === 'LT') e.ltcg += g.gain;
     }
     const byAssetType = Array.from(byAssetMap.values()).sort(
-      (a, b) => b.gain - a.gain
+      (a, b) => b.gain - a.gain,
     );
 
-    return { totalGain, stcg, ltcg, totalSellValue, totalCharges, byFy, byAssetType };
+    return {
+      totalGain,
+      stcg,
+      ltcg,
+      totalSellValue,
+      totalCharges,
+      byFy,
+      byAssetType,
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -759,15 +837,24 @@ export class PortfolioAnalyticsService {
       });
   }
 
-  /**
-   * Per-broker aggregation. `pct` is this broker's share of grand-total
-   * transaction value (BUY + SELL combined).
-   */
-  computeBrokerBreakdown(rows: TransactionsResponse[]): BrokerSlice[] {
+  private aggregateByKey(
+    rows: TransactionsResponse[],
+    keyFn: (r: TransactionsResponse) => string,
+  ): {
+    key: string;
+    count: number;
+    buyValue: number;
+    sellValue: number;
+    totalValue: number;
+    pct: number;
+  }[] {
     if (!rows || rows.length === 0) return [];
-    const map = new Map<string, { count: number; buyValue: number; sellValue: number; totalValue: number }>();
+    const map = new Map<
+      string,
+      { count: number; buyValue: number; sellValue: number; totalValue: number }
+    >();
     for (const r of rows) {
-      const key = r.brokerName || 'Unknown';
+      const key = keyFn(r) || 'Unknown';
       let e = map.get(key);
       if (!e) {
         e = { count: 0, buyValue: 0, sellValue: 0, totalValue: 0 };
@@ -779,10 +866,13 @@ export class PortfolioAnalyticsService {
       if (r.transactionType === 'BUY') e.buyValue += v;
       else if (r.transactionType === 'SELL') e.sellValue += v;
     }
-    const grand = Array.from(map.values()).reduce((s, e) => s + e.totalValue, 0);
+    const grand = Array.from(map.values()).reduce(
+      (s, e) => s + e.totalValue,
+      0,
+    );
     return Array.from(map.entries())
-      .map(([broker, e]) => ({
-        broker,
+      .map(([key, e]) => ({
+        key,
         count: e.count,
         buyValue: this.round2(e.buyValue),
         sellValue: this.round2(e.sellValue),
@@ -792,34 +882,21 @@ export class PortfolioAnalyticsService {
       .sort((a, b) => b.totalValue - a.totalValue);
   }
 
+  /**
+   * Per-broker aggregation. `pct` is this broker's share of grand-total
+   * transaction value (BUY + SELL combined).
+   */
+  computeBrokerBreakdown(rows: TransactionsResponse[]): BrokerSlice[] {
+    return this.aggregateByKey(rows, (r) => r.brokerName).map(
+      ({ key, ...rest }) => ({ broker: key, ...rest }),
+    );
+  }
+
   /** Same shape as `computeBrokerBreakdown`, grouped by `exchangeName`. */
   computeExchangeBreakdown(rows: TransactionsResponse[]): ExchangeSlice[] {
-    if (!rows || rows.length === 0) return [];
-    const map = new Map<string, { count: number; buyValue: number; sellValue: number; totalValue: number }>();
-    for (const r of rows) {
-      const key = r.exchangeName || 'Unknown';
-      let e = map.get(key);
-      if (!e) {
-        e = { count: 0, buyValue: 0, sellValue: 0, totalValue: 0 };
-        map.set(key, e);
-      }
-      const v = this.safeNum(r.totalValue);
-      e.count += 1;
-      e.totalValue += v;
-      if (r.transactionType === 'BUY') e.buyValue += v;
-      else if (r.transactionType === 'SELL') e.sellValue += v;
-    }
-    const grand = Array.from(map.values()).reduce((s, e) => s + e.totalValue, 0);
-    return Array.from(map.entries())
-      .map(([exchange, e]) => ({
-        exchange,
-        count: e.count,
-        buyValue: this.round2(e.buyValue),
-        sellValue: this.round2(e.sellValue),
-        totalValue: this.round2(e.totalValue),
-        pct: grand > 0 ? this.round1((e.totalValue / grand) * 100) : 0,
-      }))
-      .sort((a, b) => b.totalValue - a.totalValue);
+    return this.aggregateByKey(rows, (r) => r.exchangeName).map(
+      ({ key, ...rest }) => ({ exchange: key, ...rest }),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -853,7 +930,7 @@ export class PortfolioAnalyticsService {
       }
     }
     return Array.from(map.values()).sort((a, b) =>
-      a.month < b.month ? -1 : a.month > b.month ? 1 : 0
+      a.month < b.month ? -1 : a.month > b.month ? 1 : 0,
     );
   }
 
@@ -868,7 +945,7 @@ export class PortfolioAnalyticsService {
    */
   computeTopMovers(
     rows: TransactionsResponse[],
-    limit = 5
+    limit = 5,
   ): { winners: PerStockPnl[]; losers: PerStockPnl[] } {
     const gains = this.computeFifoRealizedGains(rows);
     const map = new Map<string, PerStockPnl>();
@@ -916,15 +993,30 @@ export class PortfolioAnalyticsService {
       return 0;
     }
     // Period 1: June 16 to Sept 15
-    if ((month === 6 && day >= 16) || month === 7 || month === 8 || (month === 9 && day <= 15)) {
+    if (
+      (month === 6 && day >= 16) ||
+      month === 7 ||
+      month === 8 ||
+      (month === 9 && day <= 15)
+    ) {
       return 1;
     }
     // Period 2: Sept 16 to Dec 15
-    if ((month === 9 && day >= 16) || month === 10 || month === 11 || (month === 12 && day <= 15)) {
+    if (
+      (month === 9 && day >= 16) ||
+      month === 10 ||
+      month === 11 ||
+      (month === 12 && day <= 15)
+    ) {
       return 2;
     }
     // Period 3: Dec 16 to Mar 15
-    if ((month === 12 && day >= 16) || month === 1 || month === 2 || (month === 3 && day <= 15)) {
+    if (
+      (month === 12 && day >= 16) ||
+      month === 1 ||
+      month === 2 ||
+      (month === 3 && day <= 15)
+    ) {
       return 3;
     }
     // Period 4: Mar 16 to Mar 31
@@ -934,12 +1026,20 @@ export class PortfolioAnalyticsService {
     return -1;
   }
 
+  private accrualRow(
+    category: 'Short Term' | 'Long Term',
+    label: string,
+    section: string,
+  ): AccrualSummaryRow {
+    return { category, label, section, periods: [0, 0, 0, 0, 0], total: 0 };
+  }
+
   /**
    * Aggregates realized gains for a financial year into Table F accrual periods and tax rows.
    */
   computeAccrualSummary(
     rows: TransactionsResponse[],
-    fy: string
+    fy: string,
   ): AccrualSummaryRow[] {
     const sellsInFy = rows.filter(
       (r) =>
@@ -952,21 +1052,45 @@ export class PortfolioAnalyticsService {
     const gains = this.computeFifoRealizedGains(inScope);
 
     const resultRows: AccrualSummaryRow[] = [
-      { category: 'Short Term', label: 'Taxed at 15% / 20% (Section 111A)', section: '111A', periods: [0, 0, 0, 0, 0], total: 0 },
-      { category: 'Short Term', label: 'Taxed at 30% (Section 115AD(1)(b)(ii) / VDA)', section: '115AD/VDA', periods: [0, 0, 0, 0, 0], total: 0 },
-      { category: 'Short Term', label: 'Taxed at applicable rates (Slab)', section: 'Slab', periods: [0, 0, 0, 0, 0], total: 0 },
-      { category: 'Long Term', label: 'Taxed at 10% / 12.5% (Section 112A)', section: '112A', periods: [0, 0, 0, 0, 0], total: 0 },
-      { category: 'Long Term', label: 'Taxed at 20% (Section 112 with indexation)', section: '112 (20%)', periods: [0, 0, 0, 0, 0], total: 0 },
-      { category: 'Long Term', label: 'Taxed at 10% (Section 112 without indexation)', section: '112 (10%)', periods: [0, 0, 0, 0, 0], total: 0 },
-      { category: 'Long Term', label: 'Taxed at 12.5% (Section 112 / Other)', section: '112 (12.5%)', periods: [0, 0, 0, 0, 0], total: 0 },
-      { category: 'Long Term', label: 'Taxed at DTAA rates', section: 'DTAA', periods: [0, 0, 0, 0, 0], total: 0 },
-      { category: 'Long Term', label: 'Taxed at other rates', section: 'Other', periods: [0, 0, 0, 0, 0], total: 0 },
+      this.accrualRow(
+        'Short Term',
+        'Taxed at 15% / 20% (Section 111A)',
+        '111A',
+      ),
+      this.accrualRow(
+        'Short Term',
+        'Taxed at 30% (Section 115AD(1)(b)(ii) / VDA)',
+        '115AD/VDA',
+      ),
+      this.accrualRow('Short Term', 'Taxed at applicable rates (Slab)', 'Slab'),
+      this.accrualRow(
+        'Long Term',
+        'Taxed at 10% / 12.5% (Section 112A)',
+        '112A',
+      ),
+      this.accrualRow(
+        'Long Term',
+        'Taxed at 20% (Section 112 with indexation)',
+        '112 (20%)',
+      ),
+      this.accrualRow(
+        'Long Term',
+        'Taxed at 10% (Section 112 without indexation)',
+        '112 (10%)',
+      ),
+      this.accrualRow(
+        'Long Term',
+        'Taxed at 12.5% (Section 112 / Other)',
+        '112 (12.5%)',
+      ),
+      this.accrualRow('Long Term', 'Taxed at DTAA rates', 'DTAA'),
+      this.accrualRow('Long Term', 'Taxed at other rates', 'Other'),
     ];
 
     const EQUITY_LIKE = new Set(['EQUITY', 'MUTUAL_FUND', 'ETF']);
     for (const g of gains) {
       if (g.financialYear !== fy) continue;
-      
+
       const periodIndex = this.getAccrualPeriod(g.sellDate);
       if (periodIndex < 0 || periodIndex > 4) continue;
 

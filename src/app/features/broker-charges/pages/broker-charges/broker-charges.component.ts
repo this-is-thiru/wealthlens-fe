@@ -8,7 +8,7 @@ import { FooterComponent } from '@shared/components/footer/footer.component';
 import { BadgeComponent } from '@shared/ui/badge/badge.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { AuthService } from '@core/services/auth.service';
-import { BrokerChargesService } from '@core/services/broker-charges.service';
+import { BrokerChargesService } from '@features/broker-charges/services/broker-charges.service';
 import {
   AssetType,
   TradeSegment,
@@ -39,7 +39,7 @@ import {
     ButtonComponent,
   ],
   templateUrl: './broker-charges.component.html',
-  styleUrls: ['./broker-charges.component.css']
+  styleUrls: ['./broker-charges.component.css'],
 })
 export class BrokerChargesComponent implements OnInit {
   private authService = inject(AuthService);
@@ -74,7 +74,7 @@ export class BrokerChargesComponent implements OnInit {
   simEvent = signal<ChargeEvent>('BUY');
   simStockCode = signal<string>('RELIANCE');
   simQuantity = signal<number>(100);
-  simPrice = signal<number>(1500.00);
+  simPrice = signal<number>(1500.0);
   simHoldingDays = signal<number>(180);
   isSimulating = signal<boolean>(false);
   simulationResult = signal<ChargeBreakdownResponse | null>(null);
@@ -92,7 +92,7 @@ export class BrokerChargesComponent implements OnInit {
   simBreakEven = computed(() => {
     const qty = this.simQuantity() || 1;
     const charges = this.simulationResult()?.totalCharges || 0;
-    return (charges / qty);
+    return charges / qty;
   });
 
   // ==========================================
@@ -110,12 +110,16 @@ export class BrokerChargesComponent implements OnInit {
   isContractNoteModalOpen = signal<boolean>(false);
 
   ledgerTotalFees = computed(() => {
-    return this.ledgerCharges().reduce((sum, item) => sum + (item.totalCharges || 0), 0);
+    return this.ledgerCharges().reduce(
+      (sum, item) => sum + (item.totalCharges || 0),
+      0,
+    );
   });
 
   ledgerDeductibleFees = computed(() => {
     return this.ledgerCharges().reduce((sum, item) => {
-      const ded = (item.amountByCode['BROKERAGE'] || 0) +
+      const ded =
+        (item.amountByCode['BROKERAGE'] || 0) +
         (item.amountByCode['EXCHANGE_TXN'] || 0) +
         (item.amountByCode['SEBI_FEE'] || 0) +
         (item.amountByCode['IPFT'] || 0) +
@@ -151,7 +155,9 @@ export class BrokerChargesComponent implements OnInit {
   unverifiedCards = signal<ChargeSchedule[]>([]);
   driftItems = signal<ChargeScheduleDrift[]>([]);
   catalogueEntries = signal<ChargeCatalogueEntry[]>([]);
-  rateCardSubTab = signal<'cards' | 'unverified' | 'drift' | 'catalogue'>('cards');
+  rateCardSubTab = signal<'cards' | 'unverified' | 'drift' | 'catalogue'>(
+    'cards',
+  );
   selectedScheduleForView = signal<ChargeSchedule | null>(null);
   isViewRulesModalOpen = signal<boolean>(false);
   isSeeding = signal<boolean>(false);
@@ -178,10 +184,12 @@ export class BrokerChargesComponent implements OnInit {
     const data = this.reconciliationData();
     if (!data) return [];
     if (this.reconFilter() === 'DISCREPANCIES') {
-      return data.rows.filter(r => (r.delta !== undefined && Math.abs(r.delta) > 0.001));
+      return data.rows.filter(
+        (r) => r.delta !== undefined && Math.abs(r.delta) > 0.001,
+      );
     }
     if (this.reconFilter() === 'UNRESOLVED') {
-      return data.rows.filter(r => r.resolution !== 'RESOLVED');
+      return data.rows.filter((r) => r.resolution !== 'RESOLVED');
     }
     return data.rows;
   });
@@ -198,7 +206,10 @@ export class BrokerChargesComponent implements OnInit {
     this.loadReconciliation();
   }
 
-  showToast(msg: string, type: 'success' | 'info' | 'warning' = 'success'): void {
+  showToast(
+    msg: string,
+    type: 'success' | 'info' | 'warning' = 'success',
+  ): void {
     this.toastMessage.set(msg);
     this.toastType.set(type);
     setTimeout(() => {
@@ -218,13 +229,18 @@ export class BrokerChargesComponent implements OnInit {
       stockCode: this.simStockCode(),
       quantity: Number(this.simQuantity()) || 1,
       price: Number(this.simPrice()) || 0,
-      lots: this.simAssetType() === 'MUTUAL_FUND' ? [
-        {
-          quantity: Number(this.simQuantity()) || 1,
-          price: Number(this.simPrice()) || 0,
-          date: new Date(Date.now() - (this.simHoldingDays() * 86400000)).toISOString().split('T')[0]
-        }
-      ] : undefined
+      lots:
+        this.simAssetType() === 'MUTUAL_FUND'
+          ? [
+              {
+                quantity: Number(this.simQuantity()) || 1,
+                price: Number(this.simPrice()) || 0,
+                date: new Date(Date.now() - this.simHoldingDays() * 86400000)
+                  .toISOString()
+                  .split('T')[0],
+              },
+            ]
+          : undefined,
     };
 
     this.chargesService.simulateCharges(req).subscribe({
@@ -232,7 +248,7 @@ export class BrokerChargesComponent implements OnInit {
         this.simulationResult.set(res);
         this.isSimulating.set(false);
       },
-      error: () => this.isSimulating.set(false)
+      error: () => this.isSimulating.set(false),
     });
   }
 
@@ -240,18 +256,26 @@ export class BrokerChargesComponent implements OnInit {
   loadLedger(): void {
     this.ledgerLoading.set(true);
     const email = this.userEmail() || 'demo@wealthlens.com';
-    const asset = this.filterAssetType() === 'ALL' ? undefined : this.filterAssetType();
+    const asset =
+      this.filterAssetType() === 'ALL' ? undefined : this.filterAssetType();
 
-    this.chargesService.getUserChargeHistory(email, this.filterFromDate(), this.filterToDate(), asset).subscribe({
-      next: (data) => {
-        this.ledgerCharges.set(data);
-        this.ledgerLoading.set(false);
-      },
-      error: () => this.ledgerLoading.set(false)
-    });
+    this.chargesService
+      .getUserChargeHistory(
+        email,
+        this.filterFromDate(),
+        this.filterToDate(),
+        asset,
+      )
+      .subscribe({
+        next: (data) => {
+          this.ledgerCharges.set(data);
+          this.ledgerLoading.set(false);
+        },
+        error: () => this.ledgerLoading.set(false),
+      });
 
     this.chargesService.getUserChargeGaps(email).subscribe({
-      next: (gaps) => this.ledgerGaps.set(gaps)
+      next: (gaps) => this.ledgerGaps.set(gaps),
     });
   }
 
@@ -262,7 +286,7 @@ export class BrokerChargesComponent implements OnInit {
       next: (note) => {
         this.selectedContractNote.set(note);
         this.isContractNoteModalOpen.set(true);
-      }
+      },
     });
   }
 
@@ -280,7 +304,7 @@ export class BrokerChargesComponent implements OnInit {
         this.dematAccounts.set(accounts);
         this.dematLoading.set(false);
       },
-      error: () => this.dematLoading.set(false)
+      error: () => this.dematLoading.set(false),
     });
   }
 
@@ -304,35 +328,40 @@ export class BrokerChargesComponent implements OnInit {
       accountHolder: this.newDematHolder(),
       openedOn: this.newDematOpenedOn(),
       amcFrequency: this.newDematFrequency(),
-      planCode: this.newDematPlanCode()
+      planCode: this.newDematPlanCode(),
     };
 
     this.chargesService.registerDematAccount(email, acc).subscribe({
       next: (saved) => {
-        this.dematAccounts.update(list => [saved, ...list]);
+        this.dematAccounts.update((list) => [saved, ...list]);
         this.closeAddDematModal();
-        this.showToast(`Demat account ${saved.dematAccountId} linked successfully!`, 'success');
+        this.showToast(
+          `Demat account ${saved.dematAccountId} linked successfully!`,
+          'success',
+        );
         this.newDematId.set('');
-      }
+      },
     });
   }
 
   // --- 4. RATE CARDS METHODS ---
   loadRateCards(): void {
-    this.chargesService.getChargeSchedulesByBroker(this.adminBrokerFilter()).subscribe({
-      next: (cards) => this.rateCards.set(cards)
-    });
+    this.chargesService
+      .getChargeSchedulesByBroker(this.adminBrokerFilter())
+      .subscribe({
+        next: (cards) => this.rateCards.set(cards),
+      });
     this.chargesService.getUnverifiedSchedules().subscribe({
-      next: (unv) => this.unverifiedCards.set(unv)
+      next: (unv) => this.unverifiedCards.set(unv),
     });
     this.chargesService.getScheduleDrift().subscribe({
-      next: (drift) => this.driftItems.set(drift)
+      next: (drift) => this.driftItems.set(drift),
     });
   }
 
   loadCatalogue(): void {
     this.chargesService.getChargeCatalogue().subscribe({
-      next: (cat) => this.catalogueEntries.set(cat)
+      next: (cat) => this.catalogueEntries.set(cat),
     });
   }
 
@@ -341,10 +370,13 @@ export class BrokerChargesComponent implements OnInit {
     this.chargesService.seedCharges().subscribe({
       next: (report) => {
         this.isSeeding.set(false);
-        this.showToast(`Pricing Seeded: ${report.schedulesWritten} rate cards, ${report.catalogueEntriesWritten} catalogue entries.`, 'success');
+        this.showToast(
+          `Pricing Seeded: ${report.schedulesWritten} rate cards, ${report.catalogueEntriesWritten} catalogue entries.`,
+          'success',
+        );
         this.loadRateCards();
       },
-      error: () => this.isSeeding.set(false)
+      error: () => this.isSeeding.set(false),
     });
   }
 
@@ -362,36 +394,49 @@ export class BrokerChargesComponent implements OnInit {
     const today = new Date().toISOString().split('T')[0];
     this.chargesService.closeSchedule(code, today).subscribe({
       next: () => {
-        this.showToast(`Schedule ${code} retired with end date ${today}.`, 'info');
+        this.showToast(
+          `Schedule ${code} retired with end date ${today}.`,
+          'info',
+        );
         this.loadRateCards();
-      }
+      },
     });
   }
 
   // --- 5. AMC BILLING METHODS ---
   previewAmcDue(): void {
     this.amcPreviewLoading.set(true);
-    this.chargesService.getAmcDue(this.amcFrequency(), this.amcBilledThrough()).subscribe({
-      next: (accounts) => {
-        this.amcDueAccounts.set(accounts);
-        this.amcPreviewLoading.set(false);
-        this.showToast(`Found ${accounts.length} demat accounts due for ${this.amcFrequency()} AMC.`, 'info');
-      },
-      error: () => this.amcPreviewLoading.set(false)
-    });
+    this.chargesService
+      .getAmcDue(this.amcFrequency(), this.amcBilledThrough())
+      .subscribe({
+        next: (accounts) => {
+          this.amcDueAccounts.set(accounts);
+          this.amcPreviewLoading.set(false);
+          this.showToast(
+            `Found ${accounts.length} demat accounts due for ${this.amcFrequency()} AMC.`,
+            'info',
+          );
+        },
+        error: () => this.amcPreviewLoading.set(false),
+      });
   }
 
   imposeAmcBilling(): void {
     this.isImposingAmc.set(true);
-    this.chargesService.imposeAmc(this.amcFrequency(), this.amcBilledThrough()).subscribe({
-      next: (billed) => {
-        this.amcBilledResult.set(billed);
-        this.isImposingAmc.set(false);
-        this.showToast(`AMC Billing Cycle Executed! ${billed.length} accounts billed.`, 'success');
-        this.amcDueAccounts.set([]);
-      },
-      error: () => this.isImposingAmc.set(false)
-    });
+    this.chargesService
+      .imposeAmc(this.amcFrequency(), this.amcBilledThrough())
+      .subscribe({
+        next: (billed) => {
+          this.amcBilledResult.set(billed);
+          this.isImposingAmc.set(false);
+          this.showToast(
+            `AMC Billing Cycle Executed! ${billed.length} accounts billed.`,
+            'success',
+          );
+          this.amcDueAccounts.set([]);
+        },
+        error: () => this.isImposingAmc.set(false),
+      });
   }
 
   // --- 6. RECONCILIATION METHODS ---
@@ -403,7 +448,7 @@ export class BrokerChargesComponent implements OnInit {
         this.reconciliationData.set(res);
         this.reconLoading.set(false);
       },
-      error: () => this.reconLoading.set(false)
+      error: () => this.reconLoading.set(false),
     });
   }
 }

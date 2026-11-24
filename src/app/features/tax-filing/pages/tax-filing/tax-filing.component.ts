@@ -13,7 +13,7 @@ import {
   MergedTransaction,
   CapitalGainsSummary,
   AccrualSummaryRow,
-} from '@core/services/portfolio-analytics.service';
+} from '@features/portfolio-analytics/services/portfolio-analytics.service';
 import { LucideIconsModule } from '@core/icons/lucide-icons.module';
 import { PrimeNgModule } from '@core/prime-ng.module';
 import { FooterComponent } from '@shared/components/footer/footer.component';
@@ -62,9 +62,9 @@ const EQUITY_LIKE = new Set(['EQUITY', 'MUTUAL_FUND', 'ETF']);
 // NOT configurable in v1 — see tooltip on the card.
 const TAX_RATES = {
   STCG_EQUITY_LIKE: 0.15,
-  STCG_DEBT: 0.30, // treated as slab rate; user income dependent
-  LTCG_EQUITY_LIKE: 0.10, // applied to LTCG above 1,00,000 exemption
-  LTCG_DEBT: 0.20, // with indexation
+  STCG_DEBT: 0.3, // treated as slab rate; user income dependent
+  LTCG_EQUITY_LIKE: 0.1, // applied to LTCG above 1,00,000 exemption
+  LTCG_DEBT: 0.2, // with indexation
 } as const;
 const LTCG_EQUITY_EXEMPTION = 100000;
 
@@ -170,7 +170,11 @@ export class TaxFilingComponent implements OnInit {
 
   ngOnInit(): void {
     if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'instant' as ScrollBehavior,
+      });
     }
     this.userEmail = localStorage.getItem('userEmail') || '';
     this.loadLivePrices();
@@ -190,7 +194,7 @@ export class TaxFilingComponent implements OnInit {
       next: (prices) => {
         this.livePrices = prices;
         this.loadedSymbolsCount = prices.size;
-        
+
         const url = this.livePriceService.getGoogleSheetUrl();
         if (!url) {
           this.livePriceStatus = 'not_configured';
@@ -199,7 +203,7 @@ export class TaxFilingComponent implements OnInit {
         } else {
           this.livePriceStatus = 'failed';
         }
-        
+
         this.loadTemporary();
         this.loadPortfolio();
       },
@@ -209,7 +213,7 @@ export class TaxFilingComponent implements OnInit {
         this.livePriceStatus = 'failed';
         this.loadTemporary();
         this.loadPortfolio();
-      }
+      },
     });
   }
 
@@ -249,89 +253,186 @@ export class TaxFilingComponent implements OnInit {
         this.usingMockPort = true;
         this.portfolioTransactions = [
           {
-            id: 1, rowId: 'port-1', email: 'test@gmail.com',
-            stockName: 'QUANT HEALTHCARE FUND - DIRECT', stockCode: 'QUANT_HC',
-            assetType: 'MUTUAL_FUND', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 1394.12, transactionType: 'BUY', price: 14.35,
-            totalValue: 1394.12 * 14.35, transactionDate: '2024-04-15'
+            id: 1,
+            rowId: 'port-1',
+            email: 'test@gmail.com',
+            stockName: 'QUANT HEALTHCARE FUND - DIRECT',
+            stockCode: 'QUANT_HC',
+            assetType: 'MUTUAL_FUND',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 1394.12,
+            transactionType: 'BUY',
+            price: 14.35,
+            totalValue: 1394.12 * 14.35,
+            transactionDate: '2024-04-15',
           },
           {
-            id: 2, rowId: 'port-2', email: 'test@gmail.com',
-            stockName: 'QUANT TAX PLAN-DIRECT GROWTH P', stockCode: 'QUANT_TAX',
-            assetType: 'MUTUAL_FUND', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 24.79, transactionType: 'BUY', price: 443.74,
-            totalValue: 24.79 * 443.74, transactionDate: '2024-04-15'
+            id: 2,
+            rowId: 'port-2',
+            email: 'test@gmail.com',
+            stockName: 'QUANT TAX PLAN-DIRECT GROWTH P',
+            stockCode: 'QUANT_TAX',
+            assetType: 'MUTUAL_FUND',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 24.79,
+            transactionType: 'BUY',
+            price: 443.74,
+            totalValue: 24.79 * 443.74,
+            transactionDate: '2024-04-15',
           },
           {
-            id: 3, rowId: 'port-3', email: 'test@gmail.com',
-            stockName: 'QUANT SMALL CAP FUND DIRECT PLAN - GROWTH', stockCode: 'QUANT_SMALL',
-            assetType: 'MUTUAL_FUND', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 24.72, transactionType: 'BUY', price: 283.16,
-            totalValue: 24.72 * 283.16, transactionDate: '2024-04-15'
+            id: 3,
+            rowId: 'port-3',
+            email: 'test@gmail.com',
+            stockName: 'QUANT SMALL CAP FUND DIRECT PLAN - GROWTH',
+            stockCode: 'QUANT_SMALL',
+            assetType: 'MUTUAL_FUND',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 24.72,
+            transactionType: 'BUY',
+            price: 283.16,
+            totalValue: 24.72 * 283.16,
+            transactionDate: '2024-04-15',
           },
           {
-            id: 4, rowId: 'port-4', email: 'test@gmail.com',
-            stockName: 'ICICI PRUDENTIAL NIFTY 50 INDEX FUND - DIRECT PLAN GROWTH', stockCode: 'ICICI_NIFTY50',
-            assetType: 'MUTUAL_FUND', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 17.312, transactionType: 'BUY', price: 259.94,
-            totalValue: 17.312 * 259.94, transactionDate: '2024-04-15'
+            id: 4,
+            rowId: 'port-4',
+            email: 'test@gmail.com',
+            stockName:
+              'ICICI PRUDENTIAL NIFTY 50 INDEX FUND - DIRECT PLAN GROWTH',
+            stockCode: 'ICICI_NIFTY50',
+            assetType: 'MUTUAL_FUND',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 17.312,
+            transactionType: 'BUY',
+            price: 259.94,
+            totalValue: 17.312 * 259.94,
+            transactionDate: '2024-04-15',
           },
           {
-            id: 5, rowId: 'port-5', email: 'test@gmail.com',
-            stockName: 'NIFTYBEES', stockCode: 'NIFTYBEES',
-            assetType: 'EQUITY', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 23, transactionType: 'BUY', price: 266.62,
-            totalValue: 23 * 266.62, transactionDate: '2024-04-15'
+            id: 5,
+            rowId: 'port-5',
+            email: 'test@gmail.com',
+            stockName: 'NIFTYBEES',
+            stockCode: 'NIFTYBEES',
+            assetType: 'EQUITY',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 23,
+            transactionType: 'BUY',
+            price: 266.62,
+            totalValue: 23 * 266.62,
+            transactionDate: '2024-04-15',
           },
           {
-            id: 6, rowId: 'port-6', email: 'test@gmail.com',
-            stockName: 'MID150BEES', stockCode: 'MID150BEES',
-            assetType: 'EQUITY', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 15, transactionType: 'BUY', price: 218.94,
-            totalValue: 15 * 218.94, transactionDate: '2024-04-15'
+            id: 6,
+            rowId: 'port-6',
+            email: 'test@gmail.com',
+            stockName: 'MID150BEES',
+            stockCode: 'MID150BEES',
+            assetType: 'EQUITY',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 15,
+            transactionType: 'BUY',
+            price: 218.94,
+            totalValue: 15 * 218.94,
+            transactionDate: '2024-04-15',
           },
           {
-            id: 7, rowId: 'port-7', email: 'test@gmail.com',
-            stockName: 'ICICI PRUDENTIAL NIFTY IT INDE', stockCode: 'ICICI_IT',
-            assetType: 'MUTUAL_FUND', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 260.01, transactionType: 'BUY', price: 11.54,
-            totalValue: 260.01 * 11.54, transactionDate: '2024-04-15'
+            id: 7,
+            rowId: 'port-7',
+            email: 'test@gmail.com',
+            stockName: 'ICICI PRUDENTIAL NIFTY IT INDE',
+            stockCode: 'ICICI_IT',
+            assetType: 'MUTUAL_FUND',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 260.01,
+            transactionType: 'BUY',
+            price: 11.54,
+            totalValue: 260.01 * 11.54,
+            transactionDate: '2024-04-15',
           },
           {
-            id: 8, rowId: 'port-8', email: 'test@gmail.com',
-            stockName: 'ICICI Prudential Nifty Index F', stockCode: 'ICICI_NIFTY_IDX',
-            assetType: 'MUTUAL_FUND', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 15.87, transactionType: 'BUY', price: 201.62,
-            totalValue: 15.87 * 201.62, transactionDate: '2024-04-15'
+            id: 8,
+            rowId: 'port-8',
+            email: 'test@gmail.com',
+            stockName: 'ICICI Prudential Nifty Index F',
+            stockCode: 'ICICI_NIFTY_IDX',
+            assetType: 'MUTUAL_FUND',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 15.87,
+            transactionType: 'BUY',
+            price: 201.62,
+            totalValue: 15.87 * 201.62,
+            transactionDate: '2024-04-15',
           },
           {
-            id: 9, rowId: 'port-9', email: 'test@gmail.com',
-            stockName: 'ICICI PRUDENTIAL NIFTY BANK IN', stockCode: 'ICICI_BANK',
-            assetType: 'MUTUAL_FUND', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 153.46, transactionType: 'BUY', price: 13.04,
-            totalValue: 153.46 * 13.04, transactionDate: '2024-04-15'
+            id: 9,
+            rowId: 'port-9',
+            email: 'test@gmail.com',
+            stockName: 'ICICI PRUDENTIAL NIFTY BANK IN',
+            stockCode: 'ICICI_BANK',
+            assetType: 'MUTUAL_FUND',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 153.46,
+            transactionType: 'BUY',
+            price: 13.04,
+            totalValue: 153.46 * 13.04,
+            transactionDate: '2024-04-15',
           },
           {
-            id: 10, rowId: 'port-10', email: 'test@gmail.com',
-            stockName: 'DAMCAPITAL', stockCode: 'DAMCAPITAL',
-            assetType: 'EQUITY', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 7, transactionType: 'BUY', price: 273.44,
-            totalValue: 7 * 273.44, transactionDate: '2024-04-15'
+            id: 10,
+            rowId: 'port-10',
+            email: 'test@gmail.com',
+            stockName: 'DAMCAPITAL',
+            stockCode: 'DAMCAPITAL',
+            assetType: 'EQUITY',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 7,
+            transactionType: 'BUY',
+            price: 273.44,
+            totalValue: 7 * 273.44,
+            transactionDate: '2024-04-15',
           },
           {
-            id: 11, rowId: 'port-11', email: 'test@gmail.com',
-            stockName: 'ITBEES', stockCode: 'ITBEES',
-            assetType: 'EQUITY', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 37, transactionType: 'BUY', price: 39.38,
-            totalValue: 37 * 39.38, transactionDate: '2026-05-15'
+            id: 11,
+            rowId: 'port-11',
+            email: 'test@gmail.com',
+            stockName: 'ITBEES',
+            stockCode: 'ITBEES',
+            assetType: 'EQUITY',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 37,
+            transactionType: 'BUY',
+            price: 39.38,
+            totalValue: 37 * 39.38,
+            transactionDate: '2026-05-15',
           },
           {
-            id: 12, rowId: 'port-12', email: 'test@gmail.com',
-            stockName: 'ALOKINDS', stockCode: 'ALOKINDS',
-            assetType: 'EQUITY', exchangeName: 'NSE', brokerName: 'Groww',
-            quantity: 2, transactionType: 'BUY', price: 26.99,
-            totalValue: 2 * 26.99, transactionDate: '2024-04-15'
-          }
+            id: 12,
+            rowId: 'port-12',
+            email: 'test@gmail.com',
+            stockName: 'ALOKINDS',
+            stockCode: 'ALOKINDS',
+            assetType: 'EQUITY',
+            exchangeName: 'NSE',
+            brokerName: 'Groww',
+            quantity: 2,
+            transactionType: 'BUY',
+            price: 26.99,
+            totalValue: 2 * 26.99,
+            transactionDate: '2024-04-15',
+          },
         ];
         this.portLoaded = true;
         this.onDataReady();
@@ -408,9 +509,10 @@ export class TaxFilingComponent implements OnInit {
   private recompute(): void {
     // Filter rows by asset type up-front so capital-gains math runs over the
     // narrowed set (FY filter is passed to the service as it has FY metadata).
-    const filteredRows = this.selectedAssetType === ALL_OPTION
-      ? this.rows
-      : this.rows.filter((r) => r.assetType === this.selectedAssetType);
+    const filteredRows =
+      this.selectedAssetType === ALL_OPTION
+        ? this.rows
+        : this.rows.filter((r) => r.assetType === this.selectedAssetType);
 
     // Strip _source before passing into analytics — service signature wants
     // TransactionsResponse[] and _source is added by mergeTransactions itself.
@@ -441,7 +543,10 @@ export class TaxFilingComponent implements OnInit {
     this.accrualTargetFy = targetFy;
 
     if (this.accrualTargetFy) {
-      this.accrualRows = this.analytics.computeAccrualSummary(baseRows, this.accrualTargetFy);
+      this.accrualRows = this.analytics.computeAccrualSummary(
+        baseRows,
+        this.accrualTargetFy,
+      );
 
       const colTotals = [0, 0, 0, 0, 0];
       let grandTotal = 0;
@@ -508,8 +613,10 @@ export class TaxFilingComponent implements OnInit {
 
     const equityTax =
       equityStcg * TAX_RATES.STCG_EQUITY_LIKE +
-      Math.max(0, equityLtcg - LTCG_EQUITY_EXEMPTION) * TAX_RATES.LTCG_EQUITY_LIKE;
-    const debtTax = debtStcg * TAX_RATES.STCG_DEBT + debtLtcg * TAX_RATES.LTCG_DEBT;
+      Math.max(0, equityLtcg - LTCG_EQUITY_EXEMPTION) *
+        TAX_RATES.LTCG_EQUITY_LIKE;
+    const debtTax =
+      debtStcg * TAX_RATES.STCG_DEBT + debtLtcg * TAX_RATES.LTCG_DEBT;
 
     return Math.max(0, equityTax + debtTax);
   }
@@ -590,7 +697,12 @@ export class TaxFilingComponent implements OnInit {
   // TOTALS for table footers
   // ============================================================
 
-  get perStockTotals(): { sellQty: number; costBasis: number; sellValue: number; gain: number } {
+  get perStockTotals(): {
+    sellQty: number;
+    costBasis: number;
+    sellValue: number;
+    gain: number;
+  } {
     return this.perStockRows.reduce(
       (acc, r) => ({
         sellQty: acc.sellQty + r.sellQty,
@@ -611,10 +723,21 @@ export class TaxFilingComponent implements OnInit {
     try {
       const csv = this.toCsv(this.perStockRows);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      this.downloadBlob(blob, `tax-report_${this.userEmail || 'user'}_${this.todayStr()}.csv`);
-      this.notificationService.addNotification('Export', `Exported ${this.perStockRows.length} rows to CSV`, 'success');
+      this.downloadBlob(
+        blob,
+        `tax-report_${this.userEmail || 'user'}_${this.todayStr()}.csv`,
+      );
+      this.notificationService.addNotification(
+        'Export',
+        `Exported ${this.perStockRows.length} rows to CSV`,
+        'success',
+      );
     } catch {
-      this.notificationService.addNotification('Export failed', 'Could not generate CSV file', 'error');
+      this.notificationService.addNotification(
+        'Export failed',
+        'Could not generate CSV file',
+        'error',
+      );
     }
   }
 
@@ -635,26 +758,49 @@ export class TaxFilingComponent implements OnInit {
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'TaxReport');
-      XLSX.writeFile(wb, `tax-report_${this.userEmail || 'user'}_${this.todayStr()}.xlsx`);
-      this.notificationService.addNotification('Export', `Exported ${rows.length} rows to Excel`, 'success');
+      XLSX.writeFile(
+        wb,
+        `tax-report_${this.userEmail || 'user'}_${this.todayStr()}.xlsx`,
+      );
+      this.notificationService.addNotification(
+        'Export',
+        `Exported ${rows.length} rows to Excel`,
+        'success',
+      );
     } catch {
-      this.notificationService.addNotification('Export failed', 'Could not generate Excel file', 'error');
+      this.notificationService.addNotification(
+        'Export failed',
+        'Could not generate Excel file',
+        'error',
+      );
     }
   }
 
   /** CSV builder for the per-stock table. */
   toCsv(rows: PerStockTaxRow[]): string {
     const headers = [
-      'Stock', 'Code', 'AssetType', 'SellQty', 'CostBasis',
-      'SellValue', 'RealizedGain', 'Period', 'PercentOfTotalGain',
+      'Stock',
+      'Code',
+      'AssetType',
+      'SellQty',
+      'CostBasis',
+      'SellValue',
+      'RealizedGain',
+      'Period',
+      'PercentOfTotalGain',
     ];
     const lines = [headers.join(',')];
     for (const r of rows) {
       const cells = [
-        r.stockName, r.stockCode, r.assetType,
-        r.sellQty, r.costBasis,
-        r.sellValue, r.gain,
-        r.period, r.percentOfTotalGain.toFixed(2),
+        r.stockName,
+        r.stockCode,
+        r.assetType,
+        r.sellQty,
+        r.costBasis,
+        r.sellValue,
+        r.gain,
+        r.period,
+        r.percentOfTotalGain.toFixed(2),
       ].map((v) => {
         const s = String(v ?? '');
         if (s.includes(',') || s.includes('"') || s.includes('\n')) {
@@ -686,8 +832,12 @@ export class TaxFilingComponent implements OnInit {
   }
 
   // Expose enum-like flag for template
-  isAllAsset(): boolean { return this.selectedAssetType === ALL_OPTION; }
-  isAllFy(): boolean { return this.selectedFy === ALL_OPTION; }
+  isAllAsset(): boolean {
+    return this.selectedAssetType === ALL_OPTION;
+  }
+  isAllFy(): boolean {
+    return this.selectedFy === ALL_OPTION;
+  }
 
   private computeTaxLossHarvesting(): void {
     if (!this.portfolioTransactions.length) {
@@ -714,15 +864,17 @@ export class TaxFilingComponent implements OnInit {
       if (livePrice === undefined) {
         livePrice = this.livePrices.get(nameKey);
       }
-      const mockCmp = (livePrice !== undefined && !isNaN(livePrice))
-        ? livePrice
-        : this.getMockCurrentPrice(h.stockCode || h.stockName, h.avgPrice);
+      const mockCmp =
+        livePrice !== undefined && !isNaN(livePrice)
+          ? livePrice
+          : this.getMockCurrentPrice(h.stockCode || h.stockName, h.avgPrice);
 
       const costBasis = h.netHeld * h.avgPrice;
       const currentValue = h.netHeld * mockCmp;
       const unrealizedPnl = currentValue - costBasis;
 
-      if (unrealizedPnl < -1) { // Filter holdings with significant losses
+      if (unrealizedPnl < -1) {
+        // Filter holdings with significant losses
         const holdingPeriod = new Date(h.firstDate) < oneYearAgo ? 'LT' : 'ST';
 
         // Calculate tax savings rate based on asset type and period
@@ -731,9 +883,9 @@ export class TaxFilingComponent implements OnInit {
         const isEquityLike = EQUITY_LIKE.has(h.assetType);
         let taxRate = 0;
         if (holdingPeriod === 'ST') {
-          taxRate = isEquityLike ? 0.20 : 0.30;
+          taxRate = isEquityLike ? 0.2 : 0.3;
         } else {
-          taxRate = isEquityLike ? 0.125 : 0.20;
+          taxRate = isEquityLike ? 0.125 : 0.2;
         }
 
         const potentialSavings = Math.abs(unrealizedPnl) * taxRate;
@@ -753,7 +905,9 @@ export class TaxFilingComponent implements OnInit {
       }
     }
 
-    this.harvestOpportunities = opportunities.sort((a, b) => a.unrealizedLoss - b.unrealizedLoss);
+    this.harvestOpportunities = opportunities.sort(
+      (a, b) => a.unrealizedLoss - b.unrealizedLoss,
+    );
     this.totalHarvestableLoss = totalLoss;
 
     // Potential savings depends on offset capacity against current year's realized gains
@@ -778,9 +932,11 @@ export class TaxFilingComponent implements OnInit {
     const ltcgOffsetByStcl = Math.min(remainingLtcg, remainingStcl);
 
     // Calculate tax saved based on what we actually offset
-    const isEquity = this.selectedAssetType === ALL_OPTION || EQUITY_LIKE.has(this.selectedAssetType);
-    const stcgRate = isEquity ? 0.20 : 0.30;
-    const ltcgRate = isEquity ? 0.125 : 0.20;
+    const isEquity =
+      this.selectedAssetType === ALL_OPTION ||
+      EQUITY_LIKE.has(this.selectedAssetType);
+    const stcgRate = isEquity ? 0.2 : 0.3;
+    const ltcgRate = isEquity ? 0.125 : 0.2;
 
     const stcgTaxSaved = stcgOffsetByStcl * stcgRate;
     const ltcgTaxSaved = (ltcgOffsetByLtcl + ltcgOffsetByStcl) * ltcgRate;
@@ -790,7 +946,9 @@ export class TaxFilingComponent implements OnInit {
 
   private getMockCurrentPrice(stockCode: string, avgPrice: number): number {
     const code = stockCode || 'unknown';
-    const hash = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hash = code
+      .split('')
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
     // Let some stocks be down by 10% to 25% to serve as tax-loss harvesting candidates
     if (hash % 3 === 0) {
       return avgPrice * 0.82; // Down 18%
