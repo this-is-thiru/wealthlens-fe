@@ -73,7 +73,7 @@ if (lintTargets.length > 0) {
   for (const batch of chunk(lintTargets, 50)) {
     const status = run(process.execPath, [
       eslintBin,
-      '--no-warn-on-unmatched-pattern',
+      '--no-error-on-unmatched-pattern',
       ...batch,
     ]);
     if (status !== 0) {
