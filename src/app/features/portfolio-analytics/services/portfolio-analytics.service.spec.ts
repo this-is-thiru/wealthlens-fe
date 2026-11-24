@@ -1000,5 +1000,258 @@ describe('PortfolioAnalyticsService', () => {
       expect(accrual[3].total).toBe(0);
       expect(accrual[5].total).toBe(0);
     });
+
+    it('maps ST non-equity (Slab), LT equity (112A), LT OTHER (112 10%), and LT unknown asset (Other)', () => {
+      const rows: TransactionsResponse[] = [
+        // ST DEBT -> Row 2 (Slab)
+        txn({
+          stockCode: 'D1',
+          assetType: 'DEBT',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2023-04-10',
+        }),
+        txn({
+          stockCode: 'D1',
+          assetType: 'DEBT',
+          transactionType: 'SELL',
+          quantity: 10,
+          totalValue: 1200,
+          transactionDate: '2023-10-10',
+        }),
+        // LT EQUITY -> Row 3 (112A)
+        txn({
+          stockCode: 'EQ1',
+          assetType: 'EQUITY',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2021-04-01',
+        }),
+        txn({
+          stockCode: 'EQ1',
+          assetType: 'EQUITY',
+          transactionType: 'SELL',
+          quantity: 10,
+          totalValue: 1600,
+          transactionDate: '2023-12-20',
+        }),
+        // LT OTHER -> Row 5 (112 10%)
+        txn({
+          stockCode: 'OTH1',
+          assetType: 'OTHER',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 500,
+          transactionDate: '2021-01-01',
+        }),
+        txn({
+          stockCode: 'OTH1',
+          assetType: 'OTHER',
+          transactionType: 'SELL',
+          quantity: 10,
+          totalValue: 800,
+          transactionDate: '2024-03-20',
+        }),
+        // LT custom/unknown asset type -> Row 8 (Other)
+        txn({
+          stockCode: 'GLD1',
+          assetType: 'GOLD',
+          transactionType: 'BUY',
+          quantity: 5,
+          totalValue: 1000,
+          transactionDate: '2021-01-01',
+        }),
+        txn({
+          stockCode: 'GLD1',
+          assetType: 'GOLD',
+          transactionType: 'SELL',
+          quantity: 5,
+          totalValue: 1400,
+          transactionDate: '2024-02-01',
+        }),
+      ];
+
+      const accrual = svc.computeAccrualSummary(rows, '2023-24');
+      expect(accrual[2].total).toBe(200);
+      expect(accrual[3].total).toBe(600);
+      expect(accrual[5].total).toBe(300);
+      expect(accrual[8].total).toBe(400);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // computeBrokerBreakdown & computeExchangeBreakdown
+  // ---------------------------------------------------------------------------
+  describe('computeBrokerBreakdown & computeExchangeBreakdown', () => {
+    it('returns [] for empty input', () => {
+      expect(svc.computeBrokerBreakdown([])).toEqual([]);
+      expect(svc.computeExchangeBreakdown([])).toEqual([]);
+    });
+
+    it('aggregates buy, sell, total values, counts, and percentages by broker and exchange', () => {
+      const rows: TransactionsResponse[] = [
+        txn({
+          stockCode: 'A',
+          brokerName: 'Zerodha',
+          exchangeName: 'NSE',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 6000,
+          transactionDate: '2024-01-10',
+        }),
+        txn({
+          stockCode: 'A',
+          brokerName: 'Zerodha',
+          exchangeName: 'NSE',
+          transactionType: 'SELL',
+          quantity: 5,
+          totalValue: 2000,
+          transactionDate: '2024-02-10',
+        }),
+        txn({
+          stockCode: 'B',
+          brokerName: '',
+          exchangeName: 'BSE',
+          transactionType: 'BUY',
+          quantity: 2,
+          totalValue: 2000,
+          transactionDate: '2024-02-15',
+        }),
+      ];
+
+      const brokers = svc.computeBrokerBreakdown(rows);
+      expect(brokers.length).toBe(2);
+      expect(brokers[0]).toEqual({
+        broker: 'Zerodha',
+        count: 2,
+        buyValue: 6000,
+        sellValue: 2000,
+        totalValue: 8000,
+        pct: 80,
+      });
+      expect(brokers[1].broker).toBe('Unknown');
+      expect(brokers[1].pct).toBe(20);
+
+      const exchanges = svc.computeExchangeBreakdown(rows);
+      expect(exchanges[0].exchange).toBe('NSE');
+      expect(exchanges[0].totalValue).toBe(8000);
+      expect(exchanges[1].exchange).toBe('BSE');
+      expect(exchanges[1].pct).toBe(20);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // computeTopMovers
+  // ---------------------------------------------------------------------------
+  describe('computeTopMovers', () => {
+    it('returns winners descending and losers ascending up to limit', () => {
+      const rows: TransactionsResponse[] = [
+        txn({
+          stockCode: 'WIN1',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2024-01-01',
+        }),
+        txn({
+          stockCode: 'WIN1',
+          transactionType: 'SELL',
+          quantity: 10,
+          totalValue: 2500,
+          transactionDate: '2024-02-01',
+        }),
+        txn({
+          stockCode: 'WIN1',
+          transactionType: 'BUY',
+          quantity: 5,
+          totalValue: 500,
+          transactionDate: '2024-02-02',
+        }),
+        txn({
+          stockCode: 'WIN1',
+          transactionType: 'SELL',
+          quantity: 5,
+          totalValue: 700,
+          transactionDate: '2024-02-05',
+        }),
+        txn({
+          stockCode: 'MID',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2024-01-01',
+        }),
+        txn({
+          stockCode: 'MID',
+          transactionType: 'SELL',
+          quantity: 10,
+          totalValue: 1100,
+          transactionDate: '2024-02-01',
+        }),
+        txn({
+          stockCode: 'LOSE1',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 1000,
+          transactionDate: '2024-01-01',
+        }),
+        txn({
+          stockCode: 'LOSE1',
+          transactionType: 'SELL',
+          quantity: 10,
+          totalValue: 400,
+          transactionDate: '2024-02-01',
+        }),
+      ];
+
+      const { winners, losers } = svc.computeTopMovers(rows, 2);
+      expect(winners.map((w) => w.stockCode)).toEqual(['WIN1', 'MID']);
+      expect(winners[0].gain).toBe(1700);
+      expect(losers.map((l) => l.stockCode)).toEqual(['LOSE1', 'MID']);
+      expect(losers[0].gain).toBe(-600);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // computeInsights (monthly activity & charges impact) & getAccrualPeriod edge
+  // ---------------------------------------------------------------------------
+  describe('computeInsights monthly activity & charges impact', () => {
+    it('includes monthly activity delta and charges impact insights when present', () => {
+      const now = new Date();
+      const thisYear = now.getFullYear();
+      const thisMonth = String(now.getMonth() + 1).padStart(2, '0');
+      const lastDate = new Date(thisYear, now.getMonth() - 1, 15);
+      const lastIso = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, '0')}-15`;
+      const thisIso = `${thisYear}-${thisMonth}-10`;
+
+      const rows: TransactionsResponse[] = [
+        txn({
+          stockCode: 'INFY',
+          transactionType: 'BUY',
+          quantity: 10,
+          totalValue: 10000,
+          brokerCharges: 25,
+          miscCharges: 5,
+          transactionDate: lastIso,
+        }),
+        txn({
+          stockCode: 'INFY',
+          transactionType: 'SELL',
+          quantity: 5,
+          totalValue: 6000,
+          brokerCharges: 20,
+          miscCharges: 0,
+          transactionDate: thisIso,
+        }),
+      ];
+
+      const stats = svc.computeStats(rows);
+      const insights = svc.computeInsights(rows, stats);
+      expect(insights.some((i) => i.title === 'Monthly activity')).toBe(true);
+      expect(insights.some((i) => i.title === 'Charges impact')).toBe(true);
+      expect(svc.getAccrualPeriod('2024-13-01')).toBe(-1);
+    });
   });
 });

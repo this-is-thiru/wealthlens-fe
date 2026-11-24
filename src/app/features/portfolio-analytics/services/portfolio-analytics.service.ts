@@ -837,18 +837,24 @@ export class PortfolioAnalyticsService {
       });
   }
 
-  /**
-   * Per-broker aggregation. `pct` is this broker's share of grand-total
-   * transaction value (BUY + SELL combined).
-   */
-  computeBrokerBreakdown(rows: TransactionsResponse[]): BrokerSlice[] {
+  private aggregateByKey(
+    rows: TransactionsResponse[],
+    keyFn: (r: TransactionsResponse) => string,
+  ): {
+    key: string;
+    count: number;
+    buyValue: number;
+    sellValue: number;
+    totalValue: number;
+    pct: number;
+  }[] {
     if (!rows || rows.length === 0) return [];
     const map = new Map<
       string,
       { count: number; buyValue: number; sellValue: number; totalValue: number }
     >();
     for (const r of rows) {
-      const key = r.brokerName || 'Unknown';
+      const key = keyFn(r) || 'Unknown';
       let e = map.get(key);
       if (!e) {
         e = { count: 0, buyValue: 0, sellValue: 0, totalValue: 0 };
@@ -865,8 +871,8 @@ export class PortfolioAnalyticsService {
       0,
     );
     return Array.from(map.entries())
-      .map(([broker, e]) => ({
-        broker,
+      .map(([key, e]) => ({
+        key,
         count: e.count,
         buyValue: this.round2(e.buyValue),
         sellValue: this.round2(e.sellValue),
@@ -876,40 +882,21 @@ export class PortfolioAnalyticsService {
       .sort((a, b) => b.totalValue - a.totalValue);
   }
 
+  /**
+   * Per-broker aggregation. `pct` is this broker's share of grand-total
+   * transaction value (BUY + SELL combined).
+   */
+  computeBrokerBreakdown(rows: TransactionsResponse[]): BrokerSlice[] {
+    return this.aggregateByKey(rows, (r) => r.brokerName).map(
+      ({ key, ...rest }) => ({ broker: key, ...rest }),
+    );
+  }
+
   /** Same shape as `computeBrokerBreakdown`, grouped by `exchangeName`. */
   computeExchangeBreakdown(rows: TransactionsResponse[]): ExchangeSlice[] {
-    if (!rows || rows.length === 0) return [];
-    const map = new Map<
-      string,
-      { count: number; buyValue: number; sellValue: number; totalValue: number }
-    >();
-    for (const r of rows) {
-      const key = r.exchangeName || 'Unknown';
-      let e = map.get(key);
-      if (!e) {
-        e = { count: 0, buyValue: 0, sellValue: 0, totalValue: 0 };
-        map.set(key, e);
-      }
-      const v = this.safeNum(r.totalValue);
-      e.count += 1;
-      e.totalValue += v;
-      if (r.transactionType === 'BUY') e.buyValue += v;
-      else if (r.transactionType === 'SELL') e.sellValue += v;
-    }
-    const grand = Array.from(map.values()).reduce(
-      (s, e) => s + e.totalValue,
-      0,
+    return this.aggregateByKey(rows, (r) => r.exchangeName).map(
+      ({ key, ...rest }) => ({ exchange: key, ...rest }),
     );
-    return Array.from(map.entries())
-      .map(([exchange, e]) => ({
-        exchange,
-        count: e.count,
-        buyValue: this.round2(e.buyValue),
-        sellValue: this.round2(e.sellValue),
-        totalValue: this.round2(e.totalValue),
-        pct: grand > 0 ? this.round1((e.totalValue / grand) * 100) : 0,
-      }))
-      .sort((a, b) => b.totalValue - a.totalValue);
   }
 
   // ---------------------------------------------------------------------------
@@ -1039,6 +1026,14 @@ export class PortfolioAnalyticsService {
     return -1;
   }
 
+  private accrualRow(
+    category: 'Short Term' | 'Long Term',
+    label: string,
+    section: string,
+  ): AccrualSummaryRow {
+    return { category, label, section, periods: [0, 0, 0, 0, 0], total: 0 };
+  }
+
   /**
    * Aggregates realized gains for a financial year into Table F accrual periods and tax rows.
    */
@@ -1057,69 +1052,39 @@ export class PortfolioAnalyticsService {
     const gains = this.computeFifoRealizedGains(inScope);
 
     const resultRows: AccrualSummaryRow[] = [
-      {
-        category: 'Short Term',
-        label: 'Taxed at 15% / 20% (Section 111A)',
-        section: '111A',
-        periods: [0, 0, 0, 0, 0],
-        total: 0,
-      },
-      {
-        category: 'Short Term',
-        label: 'Taxed at 30% (Section 115AD(1)(b)(ii) / VDA)',
-        section: '115AD/VDA',
-        periods: [0, 0, 0, 0, 0],
-        total: 0,
-      },
-      {
-        category: 'Short Term',
-        label: 'Taxed at applicable rates (Slab)',
-        section: 'Slab',
-        periods: [0, 0, 0, 0, 0],
-        total: 0,
-      },
-      {
-        category: 'Long Term',
-        label: 'Taxed at 10% / 12.5% (Section 112A)',
-        section: '112A',
-        periods: [0, 0, 0, 0, 0],
-        total: 0,
-      },
-      {
-        category: 'Long Term',
-        label: 'Taxed at 20% (Section 112 with indexation)',
-        section: '112 (20%)',
-        periods: [0, 0, 0, 0, 0],
-        total: 0,
-      },
-      {
-        category: 'Long Term',
-        label: 'Taxed at 10% (Section 112 without indexation)',
-        section: '112 (10%)',
-        periods: [0, 0, 0, 0, 0],
-        total: 0,
-      },
-      {
-        category: 'Long Term',
-        label: 'Taxed at 12.5% (Section 112 / Other)',
-        section: '112 (12.5%)',
-        periods: [0, 0, 0, 0, 0],
-        total: 0,
-      },
-      {
-        category: 'Long Term',
-        label: 'Taxed at DTAA rates',
-        section: 'DTAA',
-        periods: [0, 0, 0, 0, 0],
-        total: 0,
-      },
-      {
-        category: 'Long Term',
-        label: 'Taxed at other rates',
-        section: 'Other',
-        periods: [0, 0, 0, 0, 0],
-        total: 0,
-      },
+      this.accrualRow(
+        'Short Term',
+        'Taxed at 15% / 20% (Section 111A)',
+        '111A',
+      ),
+      this.accrualRow(
+        'Short Term',
+        'Taxed at 30% (Section 115AD(1)(b)(ii) / VDA)',
+        '115AD/VDA',
+      ),
+      this.accrualRow('Short Term', 'Taxed at applicable rates (Slab)', 'Slab'),
+      this.accrualRow(
+        'Long Term',
+        'Taxed at 10% / 12.5% (Section 112A)',
+        '112A',
+      ),
+      this.accrualRow(
+        'Long Term',
+        'Taxed at 20% (Section 112 with indexation)',
+        '112 (20%)',
+      ),
+      this.accrualRow(
+        'Long Term',
+        'Taxed at 10% (Section 112 without indexation)',
+        '112 (10%)',
+      ),
+      this.accrualRow(
+        'Long Term',
+        'Taxed at 12.5% (Section 112 / Other)',
+        '112 (12.5%)',
+      ),
+      this.accrualRow('Long Term', 'Taxed at DTAA rates', 'DTAA'),
+      this.accrualRow('Long Term', 'Taxed at other rates', 'Other'),
     ];
 
     const EQUITY_LIKE = new Set(['EQUITY', 'MUTUAL_FUND', 'ETF']);
