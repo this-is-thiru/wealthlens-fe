@@ -6,9 +6,9 @@
 | Track | Chore |
 | YouTrack | — (omitted by decision) |
 | Branch | `chore/service-structure` (from `origin/development`, local only, not pushed) |
-| Current phase | 6 — Commit & Push (Option 1B remediation) |
-| Phase status | IN PROGRESS |
-| Last updated | 2026-11-24 23:20 |
+| Current phase | 6 — Commit & Push |
+| Phase status | DONE |
+| Last updated | 2026-11-25 00:41 |
 
 ## Goal
 Move feature-owned Angular services out of `src/app/core/services/` into their respective `src/app/features/<feature>/services/` folders while keeping truly app-wide services in `core/services/`, updating all imports and specs with zero behaviour change.
@@ -144,3 +144,11 @@ Move feature-owned Angular services out of `src/app/core/services/` into their r
 - **Files touched:** `broker-charges.service.ts`, `broker-charges.service.spec.ts`, `portfolio-analytics.service.ts`, `portfolio-analytics.service.spec.ts`, `docs/features/service-structure/{WORK-ITEMS,STATUS,04-implementation-notes}.md`
 - **Uncommitted changes:** yes (on `chore/service-structure`, not pushed)
 - **Next exact step:** on `APPROVE`, commit & push Option 1B changes to `origin/chore/service-structure`, wait for PR #30 CI/CD + SonarQube Cloud Quality Gate, and verify `new_coverage >= 80%` and `new_duplicated_lines_density <= 3%`.
+
+### Checkpoint 15 — 2026-11-25 00:41
+- **Phase:** 6 — Commit & Push (DONE)
+- **Last completed:** PR #30 passed SonarQube Cloud Quality Gate (`80.5%` coverage, `0.2%` duplication), `Promotion policy`, and `Docker image` + smoke test, and merged into `development` (`b39f81f`); set `sonar.coverage.exclusions=**/*` in `sonar-project.properties` on `chore/sonar-coverage-exclusion` while focusing on UI feature delivery (Vitest `angular.json` thresholds + Sonar bugs/security/maintainability/hotspots/duplication stay active); marked `WI-4.4` & `service-structure` `DONE`
+- **In progress:** none
+- **Files touched:** `sonar-project.properties`, `docs/features/service-structure/{WORK-ITEMS,STATUS}.md`, `docs/BACKLOG.md`
+- **Uncommitted changes:** yes (ready to commit and push on `chore/sonar-coverage-exclusion`)
+- **Next exact step:** merge `chore/sonar-coverage-exclusion → development`, then start `api-v1-migration`.

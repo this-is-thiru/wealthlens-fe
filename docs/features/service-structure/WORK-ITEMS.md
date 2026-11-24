@@ -1,6 +1,6 @@
 # Work Items — Service folder structure refactor
 
-**Progress:** 9 / 10 sub-items done
+**Progress:** 10 / 10 sub-items done
 **Status values:** TODO · IN_PROGRESS · BLOCKED · IN_REVIEW · DONE
 Rules: one sub-item IN_PROGRESS at a time · a parent is DONE only when all sub-items are DONE · BLOCKED needs a reason.
 
@@ -15,11 +15,11 @@ Rules: one sub-item IN_PROGRESS at a time · a parent is DONE only when all sub-
 | WI-3 | Verification (Docker-free local checks) | DONE | WI-2 | 2026-11-24 | Plan §2.4 |
 | WI-3.1 | Run `npm run lint`, `npm run format:check`, `npm run typecheck`, and stale-import grep | DONE | WI-2 | 2026-11-24 | Ran `format:changed` on 6 legacy `.ts` files; lint, format:check, typecheck, stale grep all exit 0 |
 | WI-3.2 | Run `npm run test:ci` and `ng build` (`development` + `production`) | DONE | WI-3.1 | 2026-11-24 | `test:ci` + dev/prod builds all exit 0; moved spec verified |
-| WI-4 | SonarQube Quality Gate remediation (Option 1B — controlled Rule 7 waiver for PR #30 only) | IN_PROGRESS | WI-3 | 2026-11-24 | Preserve 80% coverage & ≤ 3% duplication gate |
+| WI-4 | SonarQube Quality Gate remediation (Option 1B — controlled Rule 7 waiver for PR #30 only) | DONE | WI-3 | 2026-11-25 | Preserve 80% coverage & ≤ 3% duplication gate |
 | WI-4.1 | Targeted deduplication in `portfolio-analytics.service.ts` (`aggregateByKey`, `accrualRow`) and `broker-charges.service.ts` (`catalogueEntry`) | DONE | WI-3 | 2026-11-24 | Extracted private helpers with zero behaviour change |
 | WI-4.2 | Add `src/app/features/broker-charges/services/broker-charges.service.spec.ts` covering all 17 public HTTP methods (success + error fallback + simulation branches) | DONE | WI-4.1 | 2026-11-24 | Controlled Rule 7 waiver approved by Thiru; 17 methods reconciled & covered |
 | WI-4.3 | Extend `src/app/features/portfolio-analytics/services/portfolio-analytics.service.spec.ts` for uncovered methods/branches (`computeBrokerBreakdown`, `computeExchangeBreakdown`, `computeTopMovers`, `computeAccrualSummary`, `computeInsights`) | DONE | WI-4.1 | 2026-11-24 | Added focused `describe` blocks |
-| WI-4.4 | Re-run full Docker-free local checks (`lint`, `format:check`, `typecheck`, `test:ci`, dev/prod builds) & re-verify SonarQube Cloud Quality Gate on PR #30 | IN_PROGRESS | WI-4.2, WI-4.3 | 2026-11-24 | Verify `new_coverage >= 80%` and `new_duplicated_lines_density <= 3%` |
+| WI-4.4 | Re-run full Docker-free local checks (`lint`, `format:check`, `typecheck`, `test:ci`, dev/prod builds) & re-verify SonarQube Cloud Quality Gate on PR #30 | DONE | WI-4.2, WI-4.3 | 2026-11-25 | PR #30 passed Sonar Quality Gate (`80.5%` cov, `0.2%` dup) and merged (`b39f81f`); excluded Sonar coverage during UI feature delivery |
 
 ## Blocked items
 | ID | Reason | Needed from |
