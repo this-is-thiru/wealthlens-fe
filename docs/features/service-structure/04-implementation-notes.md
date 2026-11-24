@@ -48,7 +48,8 @@ Completed all 6 work items (`WI-1.1` through `WI-3.2`) with zero behaviour chang
 | Stale-import grep | ✅ Pass (0 hits) | Zero remaining references to `@core/services/broker-charges.service` or `@core/services/portfolio-analytics.service` |
 | `npm run test:ci` | ✅ Pass (exit 0) | Moved `portfolio-analytics.service.spec.ts` discovered & passed; coverage thresholds met |
 | `npx ng build --configuration=development` | ✅ Pass (exit 0) | Clean |
-| `npx ng build --configuration=production` | ✅ Pass (exit 0) | Clean (`main-HRK64FCJ.js`) |
+| `npx ng build --configuration=production` | ✅ Pass (exit 0) | Clean (`main-2TDODLOP.js`) |
+| Option 1B service coverage (`lcov.info`) | ✅ Pass | `broker-charges.service.ts`: **100.0% (78/78)** (17 HTTP methods); `portfolio-analytics.service.ts`: **99.2% (359/362)** |
 | Docker build & smoke test | Cloud CI only | Runs automatically in GitHub Actions (`Docker image` job) on PR per permanent Docker-free local policy |
 
 ---
@@ -56,6 +57,10 @@ Completed all 6 work items (`WI-1.1` through `WI-3.2`) with zero behaviour chang
 ## 4. Deviations from plan
 - Running `npm run format:changed` on the 6 touched legacy `.ts` files was anticipated in `02-plan.md` §2.4 (zero logic changes). Because Prettier expanded many single-line mock objects in `broker-charges.service.ts`, Git's default `-M50%` rename detector shows it with lower similarity than `portfolio-analytics.service.ts` (`R084`) and `.spec.ts` (`R060`), though `git mv` was used and `git log --follow -M30%` preserves history.
 - Fixed a 1-line ESLint 10 CLI compatibility bug in `.githooks/pre-commit.mjs` (`--no-warn-on-unmatched-pattern` → `--no-error-on-unmatched-pattern`) in a separate commit so the `pre-commit` hook runs cleanly on staged `src/*.ts` files without bypassing hooks.
+- **Option 1B scope expansion & controlled Rule 7 waiver (PR #30 only):** Approved by Thiru on 2026-11-24 to satisfy the existing SonarQube Cloud Quality Gate (`new_coverage >= 80%`, `new_duplicated_lines_density <= 3%`) without weakening the gate:
+  - Add `src/app/features/broker-charges/services/broker-charges.service.spec.ts` (waiving Rule 7 for this PR only).
+  - Extend `src/app/features/portfolio-analytics/services/portfolio-analytics.service.spec.ts` for uncovered methods/branches.
+  - Apply targeted, zero-behaviour-change deduplication in `portfolio-analytics.service.ts` and `broker-charges.service.ts` (`WI-4.1`–`WI-4.4`).
 
 ## 5. Limitations & follow-ups
 - Next planned feature: `api-v1-migration` (updating frontend services to `wealthlens` backend `master` v1 APIs).

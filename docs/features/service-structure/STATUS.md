@@ -6,9 +6,9 @@
 | Track | Chore |
 | YouTrack | — (omitted by decision) |
 | Branch | `chore/service-structure` (from `origin/development`, local only, not pushed) |
-| Current phase | 6 — Commit & Push |
-| Phase status | AWAITING APPROVAL |
-| Last updated | 2026-11-24 22:54 |
+| Current phase | 6 — Commit & Push (Option 1B remediation) |
+| Phase status | IN PROGRESS |
+| Last updated | 2026-11-24 23:20 |
 
 ## Goal
 Move feature-owned Angular services out of `src/app/core/services/` into their respective `src/app/features/<feature>/services/` folders while keeping truly app-wide services in `core/services/`, updating all imports and specs with zero behaviour change.
@@ -128,3 +128,19 @@ Move feature-owned Angular services out of `src/app/core/services/` into their r
 - **Files touched:** `docs/features/service-structure/STATUS.md`, `docs/BACKLOG.md`
 - **Uncommitted changes:** yes (on `chore/service-structure`, not committed/pushed)
 - **Next exact step:** wait for Thiru `APPROVE` on commit message(s) and push to `origin/chore/service-structure` (PR target: `development`).
+
+### Checkpoint 13 — 2026-11-24 23:20
+- **Phase:** 6 — Commit & Push (Option 1B SonarQube Quality Gate remediation)
+- **Last completed:** pushed `chore/service-structure` (`a1dbbd3`, `54f49a0`, `57ef886`); analyzed PR #30 SonarQube failure (`new_coverage: 59.0% < 80%`, `new_duplicated_lines_density: 6.0% > 3%`); documented Option 1B scope expansion & controlled Rule 7 waiver (`WI-4.1`–`WI-4.4`)
+- **In progress:** awaiting Thiru review of uncovered-line / duplication / test breakdown before implementing `WI-4.1`–`WI-4.4`
+- **Files touched:** `docs/features/service-structure/WORK-ITEMS.md`, `STATUS.md`, `04-implementation-notes.md`
+- **Uncommitted changes:** yes (tracking doc updates only; no code changes yet)
+- **Next exact step:** on Thiru go-ahead, execute `WI-4.1` (deduplication), `WI-4.2` (`broker-charges.service.spec.ts`), `WI-4.3` (extend `portfolio-analytics.service.spec.ts`), and `WI-4.4` (full verification + PR #30 Sonar re-check).
+
+### Checkpoint 14 — 2026-11-24 23:34
+- **Phase:** 6 — Commit & Push (Option 1B remediation)
+- **Last completed:** `WI-4.1` deduplication (`aggregateByKey`, `accrualRow`, `catalogueEntry`), `WI-4.2` `broker-charges.service.spec.ts` (all 17 HTTP methods → **100.0%** line coverage), `WI-4.3` extended `portfolio-analytics.service.spec.ts` (**99.2%** line coverage); local `lint`, `format:check`, `typecheck`, `test:ci`, and dev/prod builds all passed (exit 0)
+- **In progress:** `WI-4.4` awaiting Thiru `APPROVE` to commit & push to `origin/chore/service-structure` and verify PR #30 SonarQube Quality Gate
+- **Files touched:** `broker-charges.service.ts`, `broker-charges.service.spec.ts`, `portfolio-analytics.service.ts`, `portfolio-analytics.service.spec.ts`, `docs/features/service-structure/{WORK-ITEMS,STATUS,04-implementation-notes}.md`
+- **Uncommitted changes:** yes (on `chore/service-structure`, not pushed)
+- **Next exact step:** on `APPROVE`, commit & push Option 1B changes to `origin/chore/service-structure`, wait for PR #30 CI/CD + SonarQube Cloud Quality Gate, and verify `new_coverage >= 80%` and `new_duplicated_lines_density <= 3%`.
