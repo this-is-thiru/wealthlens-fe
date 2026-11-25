@@ -1,8 +1,13 @@
-export type AssetType = 'EQUITY' | 'MUTUAL_FUND' | 'GOLD' | 'BOND' | 'REAL_ESTATE';
+export type AssetType =
+  | 'EQUITY'
+  | 'MUTUAL_FUND'
+  | 'GOLD'
+  | 'BOND'
+  | 'REAL_ESTATE';
 export type TradeSegment = 'DELIVERY' | 'INTRADAY' | 'F_AND_O';
 export type ExchangeName = 'NSE' | 'BSE';
 export type ChargeEvent = 'BUY' | 'SELL' | 'AMC_CYCLE' | 'CORPORATE_ACTION';
-export type AmcChargeFrequency = 'QUARTERLY' | 'YEARLY';
+export type AmcChargeFrequency = 'QUARTERLY' | 'ANNUALLY';
 
 export interface LotSlice {
   quantity: number;
@@ -19,6 +24,7 @@ export interface ChargeSimulationRequest {
   stockCode?: string;
   quantity: number;
   price: number;
+  transactionDate: string;
   lotSize?: number;
   planCode?: string;
   lots?: LotSlice[];
@@ -28,6 +34,8 @@ export interface ChargeLine {
   code: string;
   displayName: string;
   category: string;
+  basis?: string;
+  source?: string;
   amount: number;
   rate?: number;
   baseAmount?: number;
@@ -36,15 +44,13 @@ export interface ChargeLine {
 }
 
 export interface ChargeBreakdownResponse {
-  scheduleId?: string;
   scheduleCode?: string;
+  statutoryScheduleCode?: string;
   instrumentId?: string;
   resolution: string;
   totalCharges: number;
   lines: ChargeLine[];
-  deductibleCharges?: number;
-  nonDeductibleCharges?: number;
-  turnover?: number;
+  amountByCode?: Record<string, number>;
 }
 
 export interface ChargeCatalogueEntry {
@@ -109,15 +115,21 @@ export interface BillingEvent {
   amount: number;
 }
 
-export interface ChargeAccount {
-  id?: string;
-  email: string;
+/**
+ * Strict request body for `POST /api/v1/me/charges/accounts` (`fail-on-unknown-properties: true`).
+ */
+export interface ChargeAccountRequest {
   dematAccountId: string;
   brokerName: string;
   accountHolder: string;
   openedOn: string;
   amcFrequency: AmcChargeFrequency;
   planCode?: string;
+}
+
+export interface ChargeAccount extends ChargeAccountRequest {
+  id?: string;
+  email: string;
   lastBilledThrough?: string;
   billingEvents?: BillingEvent[];
 }
@@ -147,8 +159,10 @@ export interface ChargeRule {
   notes?: string;
 }
 
-export interface ChargeSchedule {
-  id?: string;
+/**
+ * Strict request body for `POST /api/v1/admin/charges/schedules` (`fail-on-unknown-properties: true`).
+ */
+export interface ChargeScheduleRequest {
   scheduleCode: string;
   brokerName: string;
   assetType?: AssetType;
@@ -160,6 +174,10 @@ export interface ChargeSchedule {
   verifiedOn?: string;
   sourceUrl?: string;
   rules: ChargeRule[];
+}
+
+export interface ChargeSchedule extends ChargeScheduleRequest {
+  id?: string;
 }
 
 export interface ChargeScheduleDrift {

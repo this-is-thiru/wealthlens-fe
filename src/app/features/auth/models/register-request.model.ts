@@ -4,4 +4,5 @@ export interface RegisterRequest {
   email: string;
   password: string;
   role: UserRole | string;
+  privacyNoticeVersion: string;
 }

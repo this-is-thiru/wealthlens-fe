@@ -7,15 +7,7 @@
       "count": 1
     }
   },
-  "src/app/core/interceptors/auth.interceptor.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "src/app/core/services/auth.service.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    },
     "no-console": {
       "count": 2
     }
@@ -23,11 +15,6 @@
   "src/app/core/services/baseurl.service.ts": {
     "@typescript-eslint/no-empty-function": {
       "count": 1
-    }
-  },
-  "src/app/features/broker-charges/services/broker-charges.service.ts": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 3
     }
   },
   "src/app/core/services/live-price.service.ts": {
@@ -55,19 +42,6 @@
       "count": 2
     }
   },
-  "src/app/features/portfolio-analytics/services/portfolio-analytics.service.spec.ts": {
-    "@typescript-eslint/array-type": {
-      "count": 2
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    }
-  },
-  "src/app/features/portfolio-analytics/services/portfolio-analytics.service.ts": {
-    "@typescript-eslint/array-type": {
-      "count": 1
-    }
-  },
   "src/app/core/services/storage.service.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
@@ -77,9 +51,6 @@
     }
   },
   "src/app/core/services/transaction.service.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 12
-    },
     "no-console": {
       "count": 2
     }
@@ -134,16 +105,8 @@
     "@angular-eslint/prefer-inject": {
       "count": 5
     },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    },
     "no-console": {
       "count": 1
-    }
-  },
-  "src/app/features/broker-charges/pages/broker-charges/broker-charges.component.html": {
-    "@angular-eslint/template/label-has-associated-control": {
-      "count": 16
     }
   },
   "src/app/features/home/components/hero-scene/hero-scene.component.ts": {
@@ -245,11 +208,6 @@
       "count": 3
     }
   },
-  "src/app/features/investments-tracking/services/corporate-action.service.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 10
-    }
-  },
   "src/app/features/portfolio-analytics/pages/portfolio-analytics/portfolio-analytics.component.html": {
     "@angular-eslint/template/prefer-control-flow": {
       "count": 1
@@ -263,6 +221,19 @@
       "count": 13
     },
     "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/app/features/portfolio-analytics/services/portfolio-analytics.service.spec.ts": {
+    "@typescript-eslint/array-type": {
+      "count": 2
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "src/app/features/portfolio-analytics/services/portfolio-analytics.service.ts": {
+    "@typescript-eslint/array-type": {
       "count": 1
     }
   },
@@ -357,11 +328,6 @@
     },
     "no-useless-assignment": {
       "count": 3
-    }
-  },
-  "src/app/shared/models/transactions-response.model.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
     }
   },
   "src/app/shared/ui/input/input.component.ts": {

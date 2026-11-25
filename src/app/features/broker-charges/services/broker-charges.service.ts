@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 import { BaseurlService } from '@core/services/baseurl.service';
 import { AuthService } from '@core/services/auth.service';
+import { PagedResponse } from '@core/models/paged-response.model';
+import { fetchAllPages } from '@core/utils/pagination.util';
 import {
   ChargeSimulationRequest,
   ChargeBreakdownResponse,
@@ -11,9 +12,12 @@ import {
   UserCharge,
   ChargeReconciliationResponse,
   ChargeAccount,
+  ChargeAccountRequest,
   ChargeSchedule,
+  ChargeScheduleRequest,
   ChargeScheduleDrift,
   ChargeSeedReport,
+  AmcChargeFrequency,
 } from '../models/broker-charges.model';
 
 @Injectable({
@@ -28,208 +32,265 @@ export class BrokerChargesService {
     return this.baseUrlService.getBaseUrl();
   }
 
+  private isDemoSession(): boolean {
+    return this.authService.isDemo();
+  }
+
   // --- 1. Simulation ---
   simulateCharges(
     request: ChargeSimulationRequest,
   ): Observable<ChargeBreakdownResponse> {
-    return this.http
-      .post<ChargeBreakdownResponse>(`${this.apiUrl}/charges/simulate`, request)
-      .pipe(catchError(() => of(this.getMockSimulationResponse(request))));
+    if (this.isDemoSession()) {
+      return of(this.getMockSimulationResponse(request));
+    }
+    return this.http.post<ChargeBreakdownResponse>(
+      `${this.apiUrl}/api/v1/me/charges/simulate`,
+      request,
+    );
   }
 
   // --- 2. Catalogue ---
   getChargeCatalogue(): Observable<ChargeCatalogueEntry[]> {
-    return this.http
-      .get<ChargeCatalogueEntry[]>(`${this.apiUrl}/charge-catalogue`)
-      .pipe(catchError(() => of(this.getMockCatalogue())));
+    if (this.isDemoSession()) {
+      return of(this.getMockCatalogue());
+    }
+    return this.http.get<ChargeCatalogueEntry[]>(
+      `${this.apiUrl}/api/v1/me/charges/charge-catalogue`,
+    );
   }
 
   // --- 3. User Charges History ---
+  getUserChargeHistoryPage(
+    page: number,
+    size: number,
+    from?: string,
+    to?: string,
+    assetType?: string,
+  ): Observable<PagedResponse<UserCharge>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    if (assetType) params = params.set('assetType', assetType);
+
+    return this.http.get<PagedResponse<UserCharge>>(
+      `${this.apiUrl}/api/v1/me/charges/user-charges`,
+      { params },
+    );
+  }
+
   getUserChargeHistory(
     email: string,
     from?: string,
     to?: string,
     assetType?: string,
   ): Observable<UserCharge[]> {
-    let params = new HttpParams();
-    if (from) params = params.set('from', from);
-    if (to) params = params.set('to', to);
-    if (assetType) params = params.set('assetType', assetType);
-
-    return this.http
-      .get<
-        UserCharge[]
-      >(`${this.apiUrl}/user-charges/user/${encodeURIComponent(email)}`, { params })
-      .pipe(catchError(() => of(this.getMockUserCharges(email))));
+    if (this.isDemoSession()) {
+      return of(this.getMockUserCharges(email));
+    }
+    return fetchAllPages((page, size) =>
+      this.getUserChargeHistoryPage(page, size, from, to, assetType),
+    );
   }
 
   getContractNote(
     email: string,
     transactionId: string,
   ): Observable<ChargeBreakdownResponse> {
-    return this.http
-      .get<ChargeBreakdownResponse>(
-        `${this.apiUrl}/user-charges/user/${encodeURIComponent(email)}/transaction/${encodeURIComponent(transactionId)}`,
-      )
-      .pipe(catchError(() => of(this.getMockContractNote(transactionId))));
+    if (this.isDemoSession() || email === 'demo@wealthlens.com') {
+      return of(this.getMockContractNote());
+    }
+    return this.http.get<ChargeBreakdownResponse>(
+      `${this.apiUrl}/api/v1/me/charges/user-charges/transaction/${encodeURIComponent(transactionId)}`,
+    );
   }
 
   getUserChargeGaps(email: string): Observable<UserCharge[]> {
-    return this.http
-      .get<
-        UserCharge[]
-      >(`${this.apiUrl}/user-charges/user/${encodeURIComponent(email)}/gaps`)
-      .pipe(catchError(() => of(this.getMockGaps(email))));
+    if (this.isDemoSession()) {
+      return of(this.getMockGaps(email));
+    }
+    return this.http.get<UserCharge[]>(
+      `${this.apiUrl}/api/v1/me/charges/user-charges/gaps`,
+    );
   }
 
   getUserChargeReconciliation(
     email: string,
   ): Observable<ChargeReconciliationResponse> {
-    return this.http
-      .get<ChargeReconciliationResponse>(
-        `${this.apiUrl}/user-charges/user/${encodeURIComponent(email)}/reconciliation`,
-      )
-      .pipe(catchError(() => of(this.getMockReconciliation())));
+    if (this.isDemoSession() || email === 'demo@wealthlens.com') {
+      return of(this.getMockReconciliation());
+    }
+    return this.http.get<ChargeReconciliationResponse>(
+      `${this.apiUrl}/api/v1/me/charges/user-charges/reconciliation`,
+    );
   }
 
   // --- 4. Demat Accounts ---
   getUserDematAccounts(email: string): Observable<ChargeAccount[]> {
-    return this.http
-      .get<
-        ChargeAccount[]
-      >(`${this.apiUrl}/charge-accounts/user/${encodeURIComponent(email)}`)
-      .pipe(catchError(() => of(this.getMockDematAccounts(email))));
+    if (this.isDemoSession()) {
+      return of(this.getMockDematAccounts(email));
+    }
+    return this.http.get<ChargeAccount[]>(
+      `${this.apiUrl}/api/v1/me/charges/accounts`,
+    );
   }
 
   registerDematAccount(
     email: string,
     account: Partial<ChargeAccount>,
   ): Observable<ChargeAccount> {
-    return this.http
-      .post<ChargeAccount>(
-        `${this.apiUrl}/charge-accounts/user/${encodeURIComponent(email)}`,
-        account,
-      )
-      .pipe(
-        catchError(() =>
-          of({
-            id: 'acc-' + Math.random().toString(36).substring(2, 7),
-            email,
-            dematAccountId: account.dematAccountId || '1208160012345678',
-            brokerName: account.brokerName || 'ZERODHA',
-            accountHolder: account.accountHolder || 'Primary User',
-            openedOn:
-              account.openedOn || new Date().toISOString().split('T')[0],
-            amcFrequency: account.amcFrequency || 'QUARTERLY',
-            planCode: account.planCode || 'STANDARD',
-            lastBilledThrough: undefined,
-            billingEvents: [],
-          }),
-        ),
-      );
+    const payload: ChargeAccountRequest = {
+      dematAccountId: account.dematAccountId || '',
+      brokerName: account.brokerName || 'ZERODHA',
+      accountHolder: account.accountHolder || 'Primary Account',
+      openedOn: account.openedOn || new Date().toISOString().split('T')[0],
+      amcFrequency: account.amcFrequency || 'QUARTERLY',
+      ...(account.planCode ? { planCode: account.planCode } : {}),
+    };
+
+    if (this.isDemoSession()) {
+      return of({
+        id: 'acc-' + Math.random().toString(36).substring(2, 7),
+        email,
+        ...payload,
+        lastBilledThrough: undefined,
+        billingEvents: [],
+      });
+    }
+
+    return this.http.post<ChargeAccount>(
+      `${this.apiUrl}/api/v1/me/charges/accounts`,
+      payload,
+    );
   }
 
   // --- 5. Admin: Rate Cards & Schedules ---
   getChargeSchedulesByBroker(broker: string): Observable<ChargeSchedule[]> {
-    return this.http
-      .get<
-        ChargeSchedule[]
-      >(`${this.apiUrl}/charge-schedules?broker=${encodeURIComponent(broker)}`)
-      .pipe(catchError(() => of(this.getMockSchedules(broker))));
+    if (this.isDemoSession()) {
+      return of(this.getMockSchedules(broker));
+    }
+    const params = new HttpParams().set('broker', broker);
+    return this.http.get<ChargeSchedule[]>(
+      `${this.apiUrl}/api/v1/admin/charges/schedules`,
+      { params },
+    );
   }
 
   getChargeScheduleByCode(code: string): Observable<ChargeSchedule> {
-    return this.http
-      .get<ChargeSchedule>(
-        `${this.apiUrl}/charge-schedules/${encodeURIComponent(code)}`,
-      )
-      .pipe(catchError(() => of(this.getMockSchedules('ZERODHA')[0])));
+    if (this.isDemoSession()) {
+      return of(this.getMockSchedules('ZERODHA')[0]);
+    }
+    return this.http.get<ChargeSchedule>(
+      `${this.apiUrl}/api/v1/admin/charges/schedules/${encodeURIComponent(code)}`,
+    );
   }
 
   getUnverifiedSchedules(): Observable<ChargeSchedule[]> {
-    return this.http
-      .get<ChargeSchedule[]>(`${this.apiUrl}/charge-schedules/unverified`)
-      .pipe(catchError(() => of(this.getMockUnverifiedSchedules())));
+    if (this.isDemoSession()) {
+      return of(this.getMockUnverifiedSchedules());
+    }
+    return this.http.get<ChargeSchedule[]>(
+      `${this.apiUrl}/api/v1/admin/charges/schedules/unverified`,
+    );
   }
 
   closeSchedule(code: string, endDate: string): Observable<ChargeSchedule> {
-    return this.http
-      .patch<ChargeSchedule>(
-        `${this.apiUrl}/charge-schedules/${encodeURIComponent(code)}/close?endDate=${encodeURIComponent(endDate)}`,
-        {},
-      )
-      .pipe(
-        catchError(() => {
-          const s = this.getMockSchedules('ZERODHA')[0];
-          s.endDate = endDate;
-          return of(s);
-        }),
-      );
+    if (this.isDemoSession()) {
+      const s = this.getMockSchedules('ZERODHA')[0];
+      s.endDate = endDate;
+      return of(s);
+    }
+    const params = new HttpParams().set('endDate', endDate);
+    return this.http.patch<ChargeSchedule>(
+      `${this.apiUrl}/api/v1/admin/charges/schedules/${encodeURIComponent(code)}/close`,
+      {},
+      { params },
+    );
   }
 
   seedCharges(): Observable<ChargeSeedReport> {
-    return this.http
-      .post<ChargeSeedReport>(`${this.apiUrl}/charges/seed`, {})
-      .pipe(
-        catchError(() =>
-          of({
-            catalogueEntriesWritten: 12,
-            schedulesWritten: 6,
-            instrumentProfilesWritten: 2,
-            message:
-              'Standard charges catalogue, rate cards, and scheme profiles successfully seeded with author audit trail.',
-          }),
-        ),
-      );
+    if (this.isDemoSession()) {
+      return of({
+        catalogueEntriesWritten: 12,
+        schedulesWritten: 6,
+        instrumentProfilesWritten: 2,
+        message:
+          'Standard charges catalogue, rate cards, and scheme profiles successfully seeded with author audit trail.',
+      });
+    }
+    return this.http.post<ChargeSeedReport>(
+      `${this.apiUrl}/api/v1/admin/charges/seed`,
+      {},
+    );
   }
 
   getScheduleDrift(): Observable<ChargeScheduleDrift[]> {
-    return this.http
-      .get<ChargeScheduleDrift[]>(`${this.apiUrl}/charge-schedules/drift`)
-      .pipe(catchError(() => of(this.getMockDrift())));
+    if (this.isDemoSession()) {
+      return of(this.getMockDrift());
+    }
+    return this.http.get<ChargeScheduleDrift[]>(
+      `${this.apiUrl}/api/v1/admin/charges/schedules/drift`,
+    );
   }
 
   publishSchedule(schedule: ChargeSchedule): Observable<ChargeSchedule> {
-    return this.http
-      .post<ChargeSchedule>(`${this.apiUrl}/charge-schedules`, schedule)
-      .pipe(catchError(() => of(schedule)));
+    const payload: ChargeScheduleRequest = {
+      scheduleCode: schedule.scheduleCode,
+      brokerName: schedule.brokerName,
+      startDate: schedule.startDate,
+      rules: schedule.rules,
+      ...(schedule.assetType ? { assetType: schedule.assetType } : {}),
+      ...(schedule.segment ? { segment: schedule.segment } : {}),
+      ...(schedule.exchange ? { exchange: schedule.exchange } : {}),
+      ...(schedule.planCode ? { planCode: schedule.planCode } : {}),
+      ...(schedule.endDate ? { endDate: schedule.endDate } : {}),
+      ...(schedule.verifiedOn ? { verifiedOn: schedule.verifiedOn } : {}),
+      ...(schedule.sourceUrl ? { sourceUrl: schedule.sourceUrl } : {}),
+    };
+
+    if (this.isDemoSession()) {
+      return of(schedule);
+    }
+
+    return this.http.post<ChargeSchedule>(
+      `${this.apiUrl}/api/v1/admin/charges/schedules`,
+      payload,
+    );
   }
 
   // --- 6. Admin: Demat AMC Billing ---
   getAmcDue(
-    frequency: string,
+    frequency: AmcChargeFrequency | string,
     billedThrough: string,
   ): Observable<ChargeAccount[]> {
+    if (this.isDemoSession()) {
+      return of(this.getMockAmcDueAccounts(frequency, billedThrough));
+    }
     const params = new HttpParams()
       .set('frequency', frequency)
       .set('billedThrough', billedThrough);
 
-    return this.http
-      .get<ChargeAccount[]>(`${this.apiUrl}/charge-accounts/due`, { params })
-      .pipe(
-        catchError(() =>
-          of(this.getMockAmcDueAccounts(frequency, billedThrough)),
-        ),
-      );
+    return this.http.get<ChargeAccount[]>(
+      `${this.apiUrl}/api/v1/admin/charges/accounts/due`,
+      { params },
+    );
   }
 
   imposeAmc(
-    frequency: string,
+    frequency: AmcChargeFrequency | string,
     billedThrough: string,
   ): Observable<ChargeAccount[]> {
+    if (this.isDemoSession()) {
+      return of(this.getMockAmcDueAccounts(frequency, billedThrough));
+    }
     const params = new HttpParams()
       .set('frequency', frequency)
       .set('billedThrough', billedThrough);
 
-    return this.http
-      .post<
-        ChargeAccount[]
-      >(`${this.apiUrl}/charges/amc/impose`, {}, { params })
-      .pipe(
-        catchError(() =>
-          of(this.getMockAmcDueAccounts(frequency, billedThrough)),
-        ),
-      );
+    return this.http.post<ChargeAccount[]>(
+      `${this.apiUrl}/api/v1/admin/charges/amc/impose`,
+      {},
+      { params },
+    );
   }
 
   // --- Mock Data Generators (for offline / demo reliability) ---
@@ -259,8 +320,6 @@ export class BrokerChargesService {
 
     const total =
       brokerage + stt + exchTxn + sebi + ipft + stampDuty + dp + gst;
-    const deductible = brokerage + exchTxn + sebi + ipft + dp + gst;
-    const nonDeductible = stt + stampDuty;
 
     const lines = [
       {
@@ -341,9 +400,6 @@ export class BrokerChargesService {
       scheduleCode: `${req.brokerName}-${req.assetType}-${req.segment || 'DELIVERY'}-2025-04-01`,
       resolution: 'RESOLVED',
       totalCharges: +total.toFixed(2),
-      deductibleCharges: +deductible.toFixed(2),
-      nonDeductibleCharges: +nonDeductible.toFixed(2),
-      turnover: +turnover.toFixed(2),
       lines,
     };
   }
@@ -622,14 +678,11 @@ export class BrokerChargesService {
     ];
   }
 
-  private getMockContractNote(txnId: string): ChargeBreakdownResponse {
+  private getMockContractNote(): ChargeBreakdownResponse {
     return {
       scheduleCode: 'ZERODHA-EQUITY-DELIVERY-2025-04-01',
       resolution: 'RESOLVED',
       totalCharges: 182.45,
-      deductibleCharges: 32.45,
-      nonDeductibleCharges: 150.0,
-      turnover: 150000.0,
       lines: [
         {
           code: 'BROKERAGE',
@@ -795,7 +848,7 @@ export class BrokerChargesService {
         brokerName: 'UPSTOX',
         accountHolder: 'Priya (Spouse)',
         openedOn: '2024-06-10',
-        amcFrequency: 'YEARLY',
+        amcFrequency: 'ANNUALLY',
         planCode: 'LIFETIME_FREE',
         lastBilledThrough: '2025-06-10',
         billingEvents: [],
@@ -972,9 +1025,9 @@ export class BrokerChargesService {
         brokerName: 'ZERODHA',
         accountHolder: 'Thiru (Primary)',
         openedOn: '2023-01-15',
-        amcFrequency: 'QUARTERLY',
+        amcFrequency: frequency === 'ANNUALLY' ? 'ANNUALLY' : 'QUARTERLY',
         planCode: 'STANDARD',
-        lastBilledThrough: '2025-12-31',
+        lastBilledThrough: billedThrough || '2025-12-31',
       },
     ];
   }

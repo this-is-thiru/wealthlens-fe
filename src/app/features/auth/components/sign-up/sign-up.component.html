@@ -1,5 +1,13 @@
-<ui-modal [open]="true" title="Create your account" size="sm" [dismissible]="true" (closed)="onClose()">
-  <p class="text-xs text-text-secondary text-center -mt-2 mb-4">Sign up to start tracking your investments</p>
+<ui-modal
+  [open]="true"
+  title="Create your account"
+  size="sm"
+  [dismissible]="true"
+  (closed)="onClose()"
+>
+  <p class="text-xs text-text-secondary text-center -mt-2 mb-4">
+    Sign up to start tracking your investments
+  </p>
 
   <form
     (ngSubmit)="onRegistration()"
@@ -19,14 +27,23 @@
         type="email"
         formControlName="email"
         placeholder="Enter your email"
-        [error]="!!(registrationForm.get('email')?.touched && registrationForm.get('email')?.invalid)"
+        [error]="
+          !!(
+            registrationForm.get('email')?.touched &&
+            registrationForm.get('email')?.invalid
+          )
+        "
       />
-      @if (registrationForm.get('email')?.touched && registrationForm.get('email')?.hasError('required')) {
-        <p class="text-xs text-red-400 mt-1">
-          Email is required
-        </p>
+      @if (
+        registrationForm.get('email')?.touched &&
+        registrationForm.get('email')?.hasError('required')
+      ) {
+        <p class="text-xs text-red-400 mt-1">Email is required</p>
       }
-      @if (registrationForm.get('email')?.touched && registrationForm.get('email')?.hasError('email')) {
+      @if (
+        registrationForm.get('email')?.touched &&
+        registrationForm.get('email')?.hasError('email')
+      ) {
         <p class="text-xs text-red-400 mt-1">
           Please enter a valid email address
         </p>
@@ -47,7 +64,12 @@
           [type]="hideRegistrationP ? 'password' : 'text'"
           formControlName="password"
           placeholder="Create a password"
-          [error]="!!(registrationForm.get('password')?.touched && registrationForm.get('password')?.invalid)"
+          [error]="
+            !!(
+              registrationForm.get('password')?.touched &&
+              registrationForm.get('password')?.invalid
+            )
+          "
         />
         <ui-button
           variant="icon"
@@ -64,12 +86,16 @@
           }
         </ui-button>
       </div>
-      @if (registrationForm.get('password')?.touched && registrationForm.get('password')?.hasError('required')) {
-        <p class="text-xs text-red-400 mt-1">
-          Password is required
-        </p>
+      @if (
+        registrationForm.get('password')?.touched &&
+        registrationForm.get('password')?.hasError('required')
+      ) {
+        <p class="text-xs text-red-400 mt-1">Password is required</p>
       }
-      @if (registrationForm.get('password')?.touched && registrationForm.get('password')?.hasError('minlength')) {
+      @if (
+        registrationForm.get('password')?.touched &&
+        registrationForm.get('password')?.hasError('minlength')
+      ) {
         <p class="text-xs text-red-400 mt-1">
           Password must be at least 6 characters
         </p>
@@ -90,7 +116,13 @@
           [type]="hideRegistrationCP ? 'password' : 'text'"
           formControlName="confirmPassword"
           placeholder="Re-enter Password"
-          [error]="!!(registrationForm.get('confirmPassword')?.touched && (registrationForm.get('confirmPassword')?.invalid || registrationForm.hasError('mismatch')))"
+          [error]="
+            !!(
+              registrationForm.get('confirmPassword')?.touched &&
+              (registrationForm.get('confirmPassword')?.invalid ||
+                registrationForm.hasError('mismatch'))
+            )
+          "
         />
         <ui-button
           variant="icon"
@@ -109,12 +141,73 @@
       </div>
     </div>
 
+    <!-- DPDP Privacy Notice Consent -->
+    <div class="p-3 bg-surface-alt border border-border rounded-lg space-y-2">
+      @if (isLoadingPrivacyNotice) {
+        <p class="text-xs text-text-muted">Loading privacy notice...</p>
+      } @else if (privacyNoticeError) {
+        <ui-alert tone="danger" title="Privacy notice unavailable">
+          <p class="text-xs">
+            Could not load the Privacy Notice version. Registration is
+            temporarily unavailable.
+          </p>
+          <div class="mt-2">
+            <ui-button
+              type="button"
+              variant="secondary"
+              size="sm"
+              (click)="loadPrivacyNotice(true)"
+            >
+              Retry
+            </ui-button>
+          </div>
+        </ui-alert>
+      } @else {
+        <div class="flex items-start gap-2.5">
+          <input
+            id="register-privacy-consent"
+            type="checkbox"
+            formControlName="acceptPrivacyNotice"
+            class="mt-0.5 h-4 w-4 rounded border-border bg-surface-input text-accent focus:ring-accent focus:ring-offset-0 cursor-pointer"
+          />
+          <label
+            for="register-privacy-consent"
+            class="text-xs text-text-secondary leading-relaxed cursor-pointer"
+          >
+            I have read and agree to the
+            <a
+              [href]="privacyNoticeUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-accent font-semibold hover:text-accent-hover underline"
+            >
+              Privacy Notice
+            </a>
+            @if (privacyNoticeVersion) {
+              <span class="text-2xs text-text-muted font-mono ml-1">
+                (v{{ privacyNoticeVersion }})
+              </span>
+            }
+            and consent to processing my personal data.
+          </label>
+        </div>
+        @if (
+          registrationForm.get('acceptPrivacyNotice')?.touched &&
+          registrationForm.get('acceptPrivacyNotice')?.invalid
+        ) {
+          <p class="text-xs text-red-400">
+            Please accept the Privacy Notice to create an account.
+          </p>
+        }
+      }
+    </div>
+
     <!-- Submit Button -->
     <ui-button
       type="submit"
       variant="primary"
       [fullWidth]="true"
-      [disabled]="registrationForm.invalid || isLoading"
+      [disabled]="!canSubmit"
       [loading]="isLoading"
     >
       Sign up
@@ -124,7 +217,11 @@
     <p class="mt-4 text-center text-xs text-text-secondary">
       Already have an account?
       <a
-        (click)="router.navigate([{ outlets: { modal: ['sign-in'] } }], { queryParamsHandling: 'preserve' })"
+        (click)="
+          router.navigate([{ outlets: { modal: ['sign-in'] } }], {
+            queryParamsHandling: 'preserve',
+          })
+        "
         class="text-accent font-semibold hover:text-accent-hover hover:underline cursor-pointer transition"
       >
         Sign in

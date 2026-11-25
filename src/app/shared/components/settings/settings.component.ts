@@ -11,6 +11,10 @@ import { FooterComponent } from '@shared/components/footer/footer.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { InputComponent } from '@shared/ui/input/input.component';
 import { ConfirmDialogService } from '@shared/ui/confirm-dialog/confirm-dialog.service';
+import {
+  extractErrorMessage,
+  formatRateLimitMessage,
+} from '@core/utils/http-error.util';
 
 @Component({
   selector: 'app-settings',
@@ -51,50 +55,83 @@ export class SettingsComponent {
   }
 
   changePassword(): void {
-    if (this.isChangingPassword || !this.oldPassword || !this.newPassword) return;
+    if (this.isChangingPassword || !this.oldPassword || !this.newPassword)
+      return;
     this.isChangingPassword = true;
 
-    this.authService.changePassword(this.email, this.oldPassword, this.newPassword).pipe(finalize(() => this.cdr.markForCheck())).subscribe({
-      next: () => {
-        this.isChangingPassword = false;
-        this.oldPassword = '';
-        this.newPassword = '';
-        this.notificationService.addNotification('Password changed', 'Your password was updated successfully.', 'success');
-      },
-      error: (err) => {
-        this.isChangingPassword = false;
-        const message = err?.error?.message || (typeof err?.error === 'string' ? err.error : null)
-          || 'Password change failed. Please check your current password.';
-        this.notificationService.addNotification('Password change failed', message, 'error');
-      },
-    });
+    this.authService
+      .changePassword(this.email, this.oldPassword, this.newPassword)
+      .pipe(finalize(() => this.cdr.markForCheck()))
+      .subscribe({
+        next: () => {
+          this.isChangingPassword = false;
+          this.oldPassword = '';
+          this.newPassword = '';
+          this.notificationService.addNotification(
+            'Password changed',
+            'Your password was updated successfully.',
+            'success',
+          );
+        },
+        error: (err) => {
+          this.isChangingPassword = false;
+          const message =
+            err?.status === 429
+              ? formatRateLimitMessage(err)
+              : extractErrorMessage(
+                  err,
+                  'Password change failed. Please check your current password.',
+                );
+          this.notificationService.addNotification(
+            'Password change failed',
+            message,
+            'error',
+          );
+        },
+      });
   }
 
   saveLivePriceUrl(): void {
     this.livePriceService.saveGoogleSheetUrl(this.googleSheetCsvUrl.trim());
-    this.notificationService.addNotification('Live prices', 'Google Sheet URL saved.', 'success');
+    this.notificationService.addNotification(
+      'Live prices',
+      'Google Sheet URL saved.',
+      'success',
+    );
   }
 
   async resetPortfolio(): Promise<void> {
     if (this.isResetting) return;
     const ok = await this.confirmDialog.confirm({
       title: 'Reset portfolio data',
-      message: 'This permanently deletes all your transactions and holdings. Your account stays. This cannot be undone.',
+      message:
+        'This permanently deletes all your transactions and holdings. Your account stays. This cannot be undone.',
       tone: 'danger',
       confirmLabel: 'Reset data',
     });
     if (!ok) return;
 
     this.isResetting = true;
-    this.transactionService.clearAllRecords(this.email).pipe(finalize(() => this.cdr.markForCheck())).subscribe({
-      next: () => {
-        this.isResetting = false;
-        this.notificationService.addNotification('Portfolio reset', 'All transactions and holdings were deleted.', 'success');
-      },
-      error: () => {
-        this.isResetting = false;
-        this.notificationService.addNotification('Reset failed', 'Could not clear your portfolio. Please try again.', 'error');
-      },
-    });
+    this.transactionService
+      .clearAllRecords(this.email)
+      .pipe(finalize(() => this.cdr.markForCheck()))
+      .subscribe({
+        next: () => {
+          this.isResetting = false;
+          this.notificationService.addNotification(
+            'Portfolio reset',
+            'All transactions and holdings were deleted.',
+            'success',
+          );
+        },
+        error: () => {
+          this.isResetting = false;
+          this.notificationService.addNotification(
+            'Reset failed',
+            'Could not clear your portfolio. Please try again.',
+            'error',
+          );
+        },
+      });
   }
 }
