@@ -64,7 +64,7 @@ describe('CorporateActionListComponent', () => {
       }),
     );
     mockCorporateActionService.deleteCorporateAction.mockReturnValue(
-      of('deleted'),
+      of(undefined),
     );
     mockCorporateActionService.updateCorporateActionPriority.mockReturnValue(
       of('updated'),
@@ -232,7 +232,14 @@ describe('CorporateActionListComponent', () => {
 
   it('should step through actions with prev/next and the arrow keys', () => {
     mockCorporateActionService.getCorporateActionById.mockImplementation(
-      (id: string) => of({ id }),
+      (id: string) =>
+        of({
+          id,
+          stockCode: id === '1' ? 'A' : 'B',
+          type: 'BONUS',
+          exDate: '2026-01-01',
+          recordDate: '2026-01-02',
+        }),
     );
     component.actions = [
       { id: '1', stockCode: 'A', type: 'BONUS', ratio: '1:1' },
