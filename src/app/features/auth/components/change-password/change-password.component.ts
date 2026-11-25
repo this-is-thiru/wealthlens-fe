@@ -1,4 +1,11 @@
-import { Component, OnInit, EventEmitter, Output, ChangeDetectorRef, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  EventEmitter,
+  Output,
+  ChangeDetectorRef,
+  inject,
+} from '@angular/core';
 import { finalize } from 'rxjs/operators';
 import {
   FormBuilder,
@@ -16,13 +23,25 @@ import { NotificationService } from '@services/notification.service';
 import { ModalComponent } from '@shared/ui/modal/modal.component';
 import { InputComponent } from '@shared/ui/input/input.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
+import {
+  extractErrorMessage,
+  formatRateLimitMessage,
+} from '@core/utils/http-error.util';
 
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideIconsModule, ReactiveFormsModule, ModalComponent, InputComponent, ButtonComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LucideIconsModule,
+    ReactiveFormsModule,
+    ModalComponent,
+    InputComponent,
+    ButtonComponent,
+  ],
   templateUrl: './change-password.component.html',
-  styleUrls: ['./change-password.component.css']
+  styleUrls: ['./change-password.component.css'],
 })
 export class ChangePasswordComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
@@ -45,7 +64,14 @@ export class ChangePasswordComponent implements OnInit {
   ngOnInit(): void {
     this.changePasswordForm = this.fb.group({
       oldPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(128)]],
+      newPassword: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(6),
+          Validators.maxLength(128),
+        ],
+      ],
       confirmPassword: ['', [Validators.required]],
     });
   }
@@ -69,8 +95,14 @@ export class ChangePasswordComponent implements OnInit {
 
   onSubmit(): void {
     if (this.isLoading) return;
-    if (this.changePasswordForm.invalid || this.passwordMismatch || this.sameAsOldPassword) {
-      Object.values(this.changePasswordForm.controls).forEach(ctrl => ctrl.markAsTouched());
+    if (
+      this.changePasswordForm.invalid ||
+      this.passwordMismatch ||
+      this.sameAsOldPassword
+    ) {
+      Object.values(this.changePasswordForm.controls).forEach((ctrl) =>
+        ctrl.markAsTouched(),
+      );
       return;
     }
 
@@ -78,27 +110,48 @@ export class ChangePasswordComponent implements OnInit {
     const email = this.authService.getUserEmail();
 
     if (!email) {
-      this.notificationService.addNotification('Authentication Required', 'Please sign in to change your password.', 'error');
+      this.notificationService.addNotification(
+        'Authentication Required',
+        'Please sign in to change your password.',
+        'error',
+      );
       this.onClose();
       return;
     }
 
     this.isLoading = true;
 
-    this.authService.changePassword(email, oldPassword, newPassword)
-      .pipe(finalize(() => {
-        this.isLoading = false;
-        this.cdr.markForCheck();
-      }))
+    this.authService
+      .changePassword(email, oldPassword, newPassword)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
+      )
       .subscribe({
         next: () => {
-          this.notificationService.addNotification('Password Updated', 'Your password was changed successfully!', 'success');
+          this.notificationService.addNotification(
+            'Password Updated',
+            'Your password was changed successfully!',
+            'success',
+          );
           this.changePasswordForm.reset();
           this.onClose();
         },
         error: (err) => {
-          const errorMsg = err?.error?.message || (typeof err?.error === 'string' ? err.error : null) || 'Failed to change password. Please check your current password.';
-          this.notificationService.addNotification('Password Update Failed', errorMsg, 'error');
+          const errorMsg =
+            err?.status === 429
+              ? formatRateLimitMessage(err)
+              : extractErrorMessage(
+                  err,
+                  'Failed to change password. Please check your current password.',
+                );
+          this.notificationService.addNotification(
+            'Password Update Failed',
+            errorMsg,
+            'error',
+          );
         },
       });
   }

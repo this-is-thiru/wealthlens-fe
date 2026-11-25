@@ -18,14 +18,27 @@ import { NotificationService } from '@services/notification.service';
 import { ModalComponent } from '@shared/ui/modal/modal.component';
 import { InputComponent } from '@shared/ui/input/input.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
+import {
+  extractErrorMessage,
+  formatRateLimitMessage,
+} from '@core/utils/http-error.util';
 
 @Component({
-    selector: 'app-sign-in',
-    standalone: true,
-    imports: [ReactiveFormsModule, FormsModule, CommonModule, RouterModule, LucideIconsModule, ModalComponent, InputComponent, ButtonComponent],
-    templateUrl: './sign-in.component.html',
-    styleUrls: ['./sign-in.component.css'], // fixed property name
-    changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-sign-in',
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    CommonModule,
+    RouterModule,
+    LucideIconsModule,
+    ModalComponent,
+    InputComponent,
+    ButtonComponent,
+  ],
+  templateUrl: './sign-in.component.html',
+  styleUrls: ['./sign-in.component.css'], // fixed property name
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SignInComponent implements OnInit {
   loginForm: FormGroup;
@@ -43,19 +56,28 @@ export class SignInComponent implements OnInit {
     this.loginForm = this.initLoginForm();
   }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
   private initLoginForm(): FormGroup {
     return this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]], // added email validator
-      password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(128)]]
+      password: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(6),
+          Validators.maxLength(128),
+        ],
+      ],
     });
   }
 
   onLogin(): void {
     if (this.loginForm.invalid) {
       // mark controls as touched to show validation messages
-      Object.values(this.loginForm.controls).forEach(ctrl => ctrl.markAsTouched());
+      Object.values(this.loginForm.controls).forEach((ctrl) =>
+        ctrl.markAsTouched(),
+      );
       return;
     }
     this.isLoading = true;
@@ -63,42 +85,68 @@ export class SignInComponent implements OnInit {
 
     const loginRequest: LoginRequest = this.loginForm.value;
 
-    this.authService.login(loginRequest)
-      .pipe(finalize(() => { 
-        this.isLoading = false; 
-        this.cd.markForCheck();
-      }))
+    this.authService
+      .login(loginRequest)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cd.markForCheck();
+        }),
+      )
       .subscribe({
         next: (res) => {
-          this.notificationService.addNotification('Login Success', 'Signed in successfully', 'success');
+          this.notificationService.addNotification(
+            'Login Success',
+            'Signed in successfully',
+            'success',
+          );
           const returnUrl = this.getReturnUrl();
           if (returnUrl) {
             this.router.navigateByUrl(returnUrl);
           } else {
-            this.router.navigate([{ outlets: { primary: ['home'], modal: null } }]);
+            this.router.navigate([
+              { outlets: { primary: ['home'], modal: null } },
+            ]);
           }
         },
         error: (err) => {
           console.error('Login error:', err);
-          
+
           // Provide user-friendly error messages based on error type
           let message = 'Something went wrong. Please try again later.';
-          if (err.status === 401) {
-            message = 'Invalid email or password. Please check your credentials and try again.';
+          if (err.status === 429) {
+            message = formatRateLimitMessage(err);
+          } else if (err.status === 401) {
+            message = extractErrorMessage(
+              err,
+              'Invalid email or password. Please check your credentials and try again.',
+            );
           } else if (err.status === 404) {
-            message = 'Account not found. Please check your email address.';
+            message = extractErrorMessage(
+              err,
+              'Account not found. Please check your email address.',
+            );
           } else if (err.status === 403) {
-            message = 'Your account is locked. Please contact support.';
+            message = extractErrorMessage(
+              err,
+              'Your account is locked. Please contact support.',
+            );
           } else if (err.status === 0) {
-            message = 'Unable to connect to the server. Please check your internet connection.';
+            message =
+              'Unable to connect to the server. Please check your internet connection.';
+          } else {
+            message = extractErrorMessage(err, message);
           }
-          
-          this.notificationService.addNotification('Login Failed', message, 'error');
+
+          this.notificationService.addNotification(
+            'Login Failed',
+            message,
+            'error',
+          );
           this.cd.markForCheck();
         },
       });
   }
-
 
   onClose(): void {
     // Close only the modal outlet, not the entire route
@@ -111,13 +159,18 @@ export class SignInComponent implements OnInit {
 
   onForgotPassword(): void {
     // Navigate to the forgot password modal
-    this.router.navigate([{ outlets: { modal: [AuthModalRoute.FORGOT_PASSWORD] } }]);
+    this.router.navigate([
+      { outlets: { modal: [AuthModalRoute.FORGOT_PASSWORD] } },
+    ]);
   }
 
   // Only allow in-app paths, never protocol-relative or absolute URLs
   private getReturnUrl(): string | null {
-    const returnUrl = this.router.routerState.snapshot.root.queryParamMap.get('returnUrl');
-    return returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : null;
+    const returnUrl =
+      this.router.routerState.snapshot.root.queryParamMap.get('returnUrl');
+    return returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//')
+      ? returnUrl
+      : null;
   }
 
   // handleGoogleSignIn() {
