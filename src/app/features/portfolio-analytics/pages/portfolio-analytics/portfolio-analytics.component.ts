@@ -241,7 +241,7 @@ export class PortfolioAnalyticsComponent implements OnInit {
   loadApiHoldings(): void {
     this.transactionService.getAllHoldings(this.userEmail).subscribe({
       next: (res) => {
-        const data = Array.isArray(res) ? res : res?.data || res?.content || [];
+        const data = Array.isArray(res) ? res : [];
         this.apiHoldings = data.map((d: any) => this.toHoldingRow(d));
         this.holdingsLoaded = true;
         this.afterLoad();

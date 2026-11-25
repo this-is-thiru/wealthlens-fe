@@ -5,8 +5,11 @@ export interface AuditMetadata {
   updatedBy: string;
 }
 
+export type TransactionStatus = 'TEMPORARY' | 'PROCESSED';
+
 export interface TransactionsResponse {
-  id: any;
+  id: string | number;
+  transactionId?: string;
   rowId?: string;
   email: string;
   stockCode: string;
@@ -22,5 +25,8 @@ export interface TransactionsResponse {
   brokerCharges?: number;
   miscCharges?: number;
   transactionDate: string;
+  status?: TransactionStatus;
+  segment?: string;
+  charges?: unknown | null;
   auditMetadata?: AuditMetadata;
 }

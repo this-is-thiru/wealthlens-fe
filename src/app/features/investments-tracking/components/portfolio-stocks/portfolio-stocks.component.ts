@@ -129,13 +129,18 @@ export class PortfolioStocksComponent implements OnInit {
     const q = (this.searchQuery || '').toLowerCase().trim();
     this.filteredHoldings = this.holdings.filter((h) => {
       if (q) {
-        const haystack = `${h.stockName} ${h.stockCode} ${h.assetType} ${h.brokerName || ''}`.toLowerCase();
+        const haystack =
+          `${h.stockName} ${h.stockCode} ${h.assetType} ${h.brokerName || ''}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       if (this.filterAssetType && h.assetType !== this.filterAssetType) {
         return false;
       }
-      if (this.filterBroker && h.brokerName && h.brokerName !== this.filterBroker) {
+      if (
+        this.filterBroker &&
+        h.brokerName &&
+        h.brokerName !== this.filterBroker
+      ) {
         return false;
       }
       if (this.filterType) {
@@ -159,7 +164,7 @@ export class PortfolioStocksComponent implements OnInit {
     this.loading = true;
     this.transactionService.getAllHoldings(this.userEmail).subscribe({
       next: (res) => {
-        const data = Array.isArray(res) ? res : res?.data || res?.content || [];
+        const data = Array.isArray(res) ? res : [];
         let totalAllInvested = 0;
         this.holdings = data.map((d: any) => {
           totalAllInvested += d.totalValue || 0;
@@ -180,7 +185,7 @@ export class PortfolioStocksComponent implements OnInit {
             netInvested: totalInvested,
             txnCount:
               (d.buyTransactionIds?.length || 0) +
-              (d.sellTransactionIds?.length || 0) ||
+                (d.sellTransactionIds?.length || 0) ||
               Object.keys(d.transactionQuantities || {}).length,
             avgPrice: d.price || 0,
             totalCharges: (d.brokerCharges || 0) + (d.miscCharges || 0),
@@ -193,13 +198,15 @@ export class PortfolioStocksComponent implements OnInit {
           });
         }
         this.holdings.sort((a, b) => b.totalInvested - a.totalInvested);
-        
+
         this.availableAssetTypes = Array.from(
-          new Set(this.holdings.map((h) => h.assetType).filter(Boolean))
+          new Set(this.holdings.map((h) => h.assetType).filter(Boolean)),
         ).sort();
 
         this.availableBrokers = Array.from(
-          new Set(this.holdings.map((h) => h.brokerName).filter(Boolean) as string[])
+          new Set(
+            this.holdings.map((h) => h.brokerName).filter(Boolean) as string[],
+          ),
         ).sort();
         this.applyFilters();
         this.holdingsLoaded.emit(this.holdings.length);
@@ -213,7 +220,7 @@ export class PortfolioStocksComponent implements OnInit {
         this.notificationService.addNotification(
           'Error',
           'Failed to load portfolio stocks.',
-          'error'
+          'error',
         );
         this.cdr.detectChanges();
       },
@@ -241,7 +248,7 @@ export class PortfolioStocksComponent implements OnInit {
           this.notificationService.addNotification(
             'Error',
             `Failed to load transactions for ${stock.stockCode}.`,
-            'error'
+            'error',
           );
           this.cdr.detectChanges();
         },

@@ -1,10 +1,26 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { HttpClient, HttpEvent, HttpErrorResponse } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpEvent,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
 import { BaseurlService } from './baseurl.service';
 import { TransactionsResponse } from '../../shared/models/transactions-response.model';
 import { RedriveResult } from '../../shared/models/redrive-result.model';
+import {
+  ALLOWED_UPLOAD_QUARTERS,
+  AssetRequest,
+  UploadQuarter,
+} from '../../shared/models/asset-request.model';
+import { PagedResponse } from '../models/paged-response.model';
+import { fetchAllPages } from '../utils/pagination.util';
+import {
+  extractErrorMessage,
+  formatRateLimitMessage,
+} from '../utils/http-error.util';
 
 @Injectable({
   providedIn: 'root',
@@ -13,7 +29,7 @@ export class TransactionService {
   private http = inject(HttpClient);
   private BASE_URL = inject(BaseurlService);
 
-  private mockTempData(): any[] {
+  private mockTempData(): TransactionsResponse[] {
     return Array.from({ length: 3 }, (_, i) => ({
       id: i + 100,
       rowId: `temp-${i}`,
@@ -31,7 +47,7 @@ export class TransactionService {
     }));
   }
 
-  private mockPortfolioData(): any[] {
+  private mockPortfolioData(): TransactionsResponse[] {
     return Array.from({ length: 19 }, (_, i) => ({
       id: i,
       rowId: `port-${i}`,
@@ -54,7 +70,7 @@ export class TransactionService {
     }));
   }
 
-  private mockApiHoldingsData(): any[] {
+  private mockApiHoldingsData(): Record<string, unknown>[] {
     return [
       {
         stockCode: 'QUANT_SMALL',
@@ -81,21 +97,37 @@ export class TransactionService {
     ];
   }
 
-  // existing APIs left unchanged...
-  getUserTransactions(email: string): Observable<any> {
+  getUserTransactionsPage(
+    page: number,
+    size: number,
+  ): Observable<PagedResponse<TransactionsResponse>> {
+    const url = `${this.BASE_URL.getBaseUrl()}/api/v1/me/portfolio/transactions`;
+    const params = new HttpParams().set('page', page).set('size', size);
+    return this.http.get<PagedResponse<TransactionsResponse>>(url, { params });
+  }
+
+  getUserTransactions(email: string): Observable<TransactionsResponse[]> {
     if (email === 'demo@wealthlens.com') {
       return of(this.mockPortfolioData());
     }
-    const url = `${this.BASE_URL.getBaseUrl()}/${email}/all/transactions`;
-    return this.http.get(url).pipe(
+    return fetchAllPages((page, size) =>
+      this.getUserTransactionsPage(page, size),
+    ).pipe(
       catchError((error) => {
         console.error('Error fetching transactions:', error);
-        return throwError(() => new Error('Failed to fetch transactions'));
+        return throwError(() => error);
       }),
     );
   }
 
-  addTransaction(email: string, transactionData: any): Observable<any> {
+  /**
+   * D1: Uses `POST /api/v1/me/portfolio/transaction/v2` for authoritative server-side
+   * broker-charge calculation. Returns raw `text/plain`.
+   */
+  addTransaction(
+    email: string,
+    transactionData: AssetRequest,
+  ): Observable<string> {
     if (email === 'demo@wealthlens.com') {
       return throwError(
         () =>
@@ -108,49 +140,23 @@ export class TransactionService {
           }),
       );
     }
-    const url = `${this.BASE_URL.getBaseUrl()}/${email}/transaction`;
-    return this.http.post(url, transactionData).pipe(
+    const url = `${this.BASE_URL.getBaseUrl()}/api/v1/me/portfolio/transaction/v2`;
+    return this.http.post(url, transactionData, { responseType: 'text' }).pipe(
       catchError((error) => {
         console.error('Error adding transaction:', error);
-        return throwError(() => new Error('Failed to add transaction'));
+        return throwError(() => error);
       }),
     );
   }
 
   /**
-   * Upload transactions file with progress events.
-   * Returns Observable<HttpEvent<any>> so caller can react to progress and response.
+   * D5: `quarter` is required by backend (`Q1` | `Q2` | `Q3` | `Q4`) and response is `text/plain`.
    */
-  // uploadTransactions(email: string, file: File): Observable<HttpEvent<any>> {
-
-  //   const formData = new FormData();
-  //   formData.append('file', file);
-
-  //   const url = `${this.BASE_URL.getBaseUrl()}/portfolio/user/${email}/upload-transactions`;
-
-  //   return this.http.post(url, formData, {
-  //     responseType: 'text' as 'json',
-  //     reportProgress: true,
-  //     observe: 'events',
-  //   }).pipe(
-  //     tap({
-  //       next: (event) => {
-  //         // event handling is done in component; this tap just logs.
-  //       },
-  //       error: (err) => console.error('❌ [Service] upload error raw:', err),
-  //     }),
-  //     catchError((err) => {
-  //       // rethrow original error so component can show meaningful message
-  //       return throwError(() => err);
-  //     })
-  //   );
-  // }
-
   uploadTransactions(
     email: string,
     file: File,
-    quarter?: string,
-  ): Observable<HttpEvent<any>> {
+    quarter: UploadQuarter | string = 'Q1',
+  ): Observable<HttpEvent<string>> {
     if (email === 'demo@wealthlens.com') {
       return throwError(
         () =>
@@ -162,27 +168,39 @@ export class TransactionService {
           }),
       );
     }
+
+    const normalizedQuarter = quarter?.trim().toUpperCase() as UploadQuarter;
+    if (!ALLOWED_UPLOAD_QUARTERS.includes(normalizedQuarter)) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            error: {
+              detail: `Invalid quarter: ${quarter}. Allowed quarters: ${ALLOWED_UPLOAD_QUARTERS.join(', ')}.`,
+            },
+          }),
+      );
+    }
+
     const formData = new FormData();
     formData.append('file', file);
 
-    let url = `${this.BASE_URL.getBaseUrl()}/portfolio/user/${email}/upload-transactions`;
-    if (quarter) {
-      url += `?quarter=${quarter}`;
-    }
+    const url = `${this.BASE_URL.getBaseUrl()}/api/v1/me/portfolio/transactions/uploads`;
+    const params = new HttpParams().set('quarter', normalizedQuarter);
 
     return this.http.post(url, formData, {
+      params,
       observe: 'events',
       reportProgress: true,
+      responseType: 'text',
     });
   }
 
   /**
-   * The upload endpoint answers 200 with a plain message even when nothing was saved,
-   * so the outcome has to be read from the text:
-   *  - "No transaction uploaded. Errors: [...]"  → row validation failed, nothing saved
-   *  - "Filtered out transactions: [id, ...]"    → saved, but these rows are held as
-   *                                                 temporary until corporate actions run
-   *  - anything else                              → everything saved
+   * Interprets the plain-text response returned by `POST /api/v1/me/portfolio/transactions/uploads`.
+   * Supports both backend `master` wording ("From <file>, quarter <Q>: <n> recorded...; held back
+   * for a corporate action: [...]") and legacy wording ("No transaction uploaded...",
+   * "Filtered out transactions: [...]").
    */
   interpretUploadResponse(body: unknown): {
     tone: 'success' | 'warn' | 'error';
@@ -190,7 +208,7 @@ export class TransactionService {
     message: string;
     details: string[];
   } {
-    const text = typeof body === 'string' ? body : '';
+    const text = typeof body === 'string' ? body.trim() : '';
     const listItems = (s: string): string[] => {
       const inner = s.match(/\[(.*)\]\s*$/s)?.[1] ?? '';
       return inner
@@ -211,12 +229,24 @@ export class TransactionService {
       };
     }
 
-    if (text.startsWith('Filtered out transactions')) {
+    if (
+      text.startsWith('Filtered out transactions') ||
+      text.includes('held back for a corporate action:')
+    ) {
       const held = listItems(text).length;
       return {
         tone: 'warn',
         title: 'Uploaded with rows on hold',
         message: `${held || 'Some'} transaction${held === 1 ? ' is' : 's are'} held in the Temporary tab until pending corporate actions are applied. Apply them, then redrive.`,
+        details: [],
+      };
+    }
+
+    if (text.startsWith('From ') && text.includes('recorded')) {
+      return {
+        tone: 'success',
+        title: 'Transactions uploaded',
+        message: text,
         details: [],
       };
     }
@@ -251,19 +281,18 @@ export class TransactionService {
   }
 
   /**
-   * Classify an upload error into a user-friendly { category, title, message }
-   * triple. Handles both HTTP error responses (read from `err.status` /
-   * `err.error.message`) and client-side validation errors (read from
-   * `err.category`).
+   * Classify an upload error into a user-friendly { category, title, message } triple.
+   * Reads RFC 9457 `ProblemDetail.detail` first, falling back to legacy shapes and
+   * client-side validation categories.
    */
-  classifyUploadError(err: any): {
+  classifyUploadError(err: unknown): {
     category: string;
     title: string;
     message: string;
   } {
-    // Client-side validation categories: caller passes `{ category: 'no-file' }`
-    // (or similar) and we return the fixed mapping.
-    switch (err?.category) {
+    const errRec =
+      err && typeof err === 'object' ? (err as Record<string, unknown>) : null;
+    switch (errRec?.['category']) {
       case 'no-file':
         return {
           category: 'no-file',
@@ -290,21 +319,19 @@ export class TransactionService {
         };
     }
 
-    const status: number = typeof err?.status === 'number' ? err.status : 0;
-    // Error bodies arrive wrapped as { data: { message } }; the auth interceptor only unwraps successes.
-    const serverBody = err?.error?.data ?? err?.error;
-    const bodyMessage =
-      typeof serverBody === 'string'
-        ? serverBody
-        : typeof serverBody?.message === 'string'
-          ? serverBody.message
-          : undefined;
+    const status: number =
+      typeof errRec?.['status'] === 'number' ? errRec['status'] : 0;
+    const extracted = extractErrorMessage(err, '');
     const rawServerMessage: string | undefined =
-      this.friendlyServerMessage(bodyMessage) || err?.message;
+      this.friendlyServerMessage(extracted || undefined) ||
+      (typeof errRec?.['message'] === 'string' &&
+      !(err instanceof HttpErrorResponse)
+        ? errRec['message']
+        : undefined);
 
-    // status 0 (or missing) → network vs unknown
     if (status === 0) {
-      const msg = typeof err?.message === 'string' ? err.message : '';
+      const msg =
+        typeof errRec?.['message'] === 'string' ? errRec['message'] : '';
       const lower = msg.toLowerCase();
       const looksNetwork =
         msg.includes('HttpErrorResponse') ||
@@ -337,13 +364,15 @@ export class TransactionService {
         return {
           category: 'forbidden',
           title: 'Not allowed',
-          message: "Your account doesn't have upload permission.",
+          message:
+            rawServerMessage || "Your account doesn't have upload permission.",
         };
       case 404:
         return {
           category: 'not-found',
           title: 'Portfolio not found',
           message:
+            rawServerMessage ||
             "We couldn't find a portfolio for your account. Please contact support.",
         };
       case 413:
@@ -359,6 +388,12 @@ export class TransactionService {
           title: 'Unsupported file',
           message:
             "The server couldn't read this file. Make sure it's a valid .xlsx.",
+        };
+      case 429:
+        return {
+          category: 'rate-limited',
+          title: 'Too many requests',
+          message: formatRateLimitMessage(err),
         };
       case 400:
         return {
@@ -385,21 +420,37 @@ export class TransactionService {
     }
   }
 
+  /** Priority 5 (WI-6.1): Excel upload template download. */
   downloadTemplate(): Observable<Blob> {
-    const url = `${this.BASE_URL.getBaseUrl()}/helper/template`;
+    const url = `${this.BASE_URL.getBaseUrl()}/api/v1/me/templates/excel`;
     return this.http.get(url, { responseType: 'blob' });
   }
 
-  /** Fetch current transactions */
+  searchTransactionsPage(
+    queryFilters: Record<string, unknown>[],
+    page: number,
+    size: number,
+  ): Observable<PagedResponse<TransactionsResponse>> {
+    const url = `${this.BASE_URL.getBaseUrl()}/api/v1/me/portfolio/transactions/search`;
+    const params = new HttpParams().set('page', page).set('size', size);
+    return this.http.post<PagedResponse<TransactionsResponse>>(
+      url,
+      { queryFilters },
+      { params },
+    );
+  }
+
+  /** Fetch current transactions (paginated search with `queryFilters`). */
   getCurrentTransactions(
     email: string,
-    filters: any[] = [],
+    queryFilters: Record<string, unknown>[] = [],
   ): Observable<TransactionsResponse[]> {
     if (email === 'demo@wealthlens.com') {
       return of(this.mockPortfolioData());
     }
-    const url = `${this.BASE_URL.getBaseUrl()}/transactions/user/${email}`;
-    return this.http.post<TransactionsResponse[]>(url, { filters });
+    return fetchAllPages((page, size) =>
+      this.searchTransactionsPage(queryFilters, page, size),
+    );
   }
 
   /** Fetch temporary transactions */
@@ -407,7 +458,7 @@ export class TransactionService {
     if (email === 'demo@wealthlens.com') {
       return of(this.mockTempData());
     }
-    const url = `${this.BASE_URL.getBaseUrl()}/temporary-transactions/user/${email}/all`;
+    const url = `${this.BASE_URL.getBaseUrl()}/api/v1/me/portfolio/temporary-transactions`;
     return this.http.get<TransactionsResponse[]>(url);
   }
 
@@ -422,17 +473,17 @@ export class TransactionService {
         message: 'Demo mode: 1 temporary transaction redriven successfully.',
       });
     }
-    const url = `${this.BASE_URL.getBaseUrl()}/temporary-transactions/user/${email}/redrive`;
+    const url = `${this.BASE_URL.getBaseUrl()}/api/v1/me/portfolio/temporary-transactions/redrive`;
     return this.http.post<RedriveResult>(url, {});
   }
 
   /** Fetch holdings */
-  getAllHoldings(email: string): Observable<any> {
+  getAllHoldings(email: string): Observable<Record<string, unknown>[]> {
     if (email === 'demo@wealthlens.com') {
       return of(this.mockApiHoldingsData());
     }
-    const url = `${this.BASE_URL.getBaseUrl()}/portfolio/user/${email}/stocks/all`;
-    return this.http.get<any>(url);
+    const url = `${this.BASE_URL.getBaseUrl()}/api/v1/me/portfolio/stocks`;
+    return this.http.get<Record<string, unknown>[]>(url);
   }
 
   /** Fetch transactions for a single stock */
@@ -444,7 +495,6 @@ export class TransactionService {
       const all = this.mockPortfolioData();
       return of(all.filter((t) => t.stockCode === stockCode));
     }
-    const url = `${this.BASE_URL.getBaseUrl()}/transactions/user/${email}`;
     const queryFilters = [
       {
         filterKey: 'stock_code',
@@ -457,11 +507,13 @@ export class TransactionService {
         isDateField: false,
       },
     ];
-    return this.http.post<TransactionsResponse[]>(url, { queryFilters });
+    return fetchAllPages((page, size) =>
+      this.searchTransactionsPage(queryFilters, page, size),
+    );
   }
 
-  /** Clear all portfolio records for a user */
-  clearAllRecords(email: string): Observable<any> {
+  /** Clear all portfolio records for a user (`DELETE /api/v1/me/portfolio`, `text/plain`). */
+  clearAllRecords(email: string): Observable<string> {
     if (email === 'demo@wealthlens.com') {
       return throwError(
         () =>
@@ -474,7 +526,7 @@ export class TransactionService {
           }),
       );
     }
-    const url = `${this.BASE_URL.getBaseUrl()}/portfolio/user/${email}/clear/all`;
-    return this.http.post(url, {});
+    const url = `${this.BASE_URL.getBaseUrl()}/api/v1/me/portfolio`;
+    return this.http.delete(url, { responseType: 'text' });
   }
 }
