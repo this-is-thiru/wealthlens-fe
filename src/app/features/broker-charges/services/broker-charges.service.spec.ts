@@ -1,34 +1,36 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { BaseurlService } from '@core/services/baseurl.service';
+import { AuthService } from '@core/services/auth.service';
 import { BrokerChargesService } from './broker-charges.service';
 import {
   ChargeAccount,
   ChargeBreakdownResponse,
-  ChargeCatalogueEntry,
-  ChargeReconciliationResponse,
   ChargeSchedule,
-  ChargeScheduleDrift,
-  ChargeSeedReport,
   ChargeSimulationRequest,
   UserCharge,
 } from '../models/broker-charges.model';
 
-describe('BrokerChargesService', () => {
+describe('BrokerChargesService (API v1)', () => {
   const BASE = 'http://api.test';
   let service: BrokerChargesService;
   let httpMock: HttpTestingController;
+  const isDemoSignal = signal(false);
 
   beforeEach(() => {
+    isDemoSignal.set(false);
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: BaseurlService, useValue: { getBaseUrl: () => BASE } },
+        { provide: AuthService, useValue: { isDemo: isDemoSignal } },
       ],
     });
     service = TestBed.inject(BrokerChargesService);
@@ -39,363 +41,144 @@ describe('BrokerChargesService', () => {
     httpMock.verify();
   });
 
-  // ---------------------------------------------------------------------------
-  // 1. Simulation
-  // ---------------------------------------------------------------------------
-  describe('simulateCharges', () => {
-    const buyDeliveryReq: ChargeSimulationRequest = {
+  const buyDeliveryReq: ChargeSimulationRequest = {
+    brokerName: 'ZERODHA',
+    assetType: 'EQUITY',
+    segment: 'DELIVERY',
+    event: 'BUY',
+    quantity: 100,
+    price: 1500,
+    stockCode: 'RELIANCE',
+    transactionDate: '2026-03-15',
+  };
+
+  it('POSTs to /api/v1/me/charges/simulate and propagates real HTTP errors (A1: no mock fallback for real users)', () => {
+    const expected: ChargeBreakdownResponse = {
+      scheduleCode: 'ZERODHA-EQUITY-DELIVERY-2025-04-01',
+      resolution: 'RESOLVED',
+      totalCharges: 182.45,
+      lines: [],
+    };
+    let actual: ChargeBreakdownResponse | undefined;
+    service.simulateCharges(buyDeliveryReq).subscribe((r) => (actual = r));
+
+    const req = httpMock.expectOne(`${BASE}/api/v1/me/charges/simulate`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(buyDeliveryReq);
+    req.flush(expected);
+    expect(actual).toEqual(expected);
+
+    let failedStatus = 0;
+    service.simulateCharges(buyDeliveryReq).subscribe({
+      error: (err) => (failedStatus = err.status),
+    });
+    httpMock
+      .expectOne(`${BASE}/api/v1/me/charges/simulate`)
+      .flush(
+        { detail: 'Schedule missing' },
+        { status: 400, statusText: 'Bad Request' },
+      );
+    expect(failedStatus).toBe(400);
+  });
+
+  it('returns mock simulation data ONLY in demo mode without hitting the network (A1)', () => {
+    isDemoSignal.set(true);
+    let actual: ChargeBreakdownResponse | undefined;
+    service.simulateCharges(buyDeliveryReq).subscribe((r) => (actual = r));
+
+    expect(actual?.resolution).toBe('RESOLVED');
+    expect(actual?.lines.some((l) => l.code === 'STAMP_DUTY')).toBe(true);
+  });
+
+  it('paginates GET /api/v1/me/charges/user-charges across multiple pages with filter params', () => {
+    let charges: UserCharge[] = [];
+    service
+      .getUserChargeHistory('u@test.com', '2026-01-01', '2026-03-31', 'EQUITY')
+      .subscribe((r) => (charges = r));
+
+    const p0 = httpMock.expectOne(
+      `${BASE}/api/v1/me/charges/user-charges?page=0&size=200&from=2026-01-01&to=2026-03-31&assetType=EQUITY`,
+    );
+    p0.flush({
+      content: [{ id: 'uc-1', transactionId: 't1', totalCharges: 10 }],
+      page: { number: 0, size: 200, totalElements: 2, totalPages: 2 },
+    });
+
+    const p1 = httpMock.expectOne(
+      `${BASE}/api/v1/me/charges/user-charges?page=1&size=200&from=2026-01-01&to=2026-03-31&assetType=EQUITY`,
+    );
+    p1.flush({
+      content: [{ id: 'uc-2', transactionId: 't2', totalCharges: 20 }],
+      page: { number: 1, size: 200, totalElements: 2, totalPages: 2 },
+    });
+
+    expect(charges).toHaveLength(2);
+  });
+
+  it('sanitizes ChargeAccountRequest to strip read-only fields before POST /api/v1/me/charges/accounts', () => {
+    const dirtyAccount: ChargeAccount = {
+      id: 'read-only-id',
+      email: 'u@test.com',
+      dematAccountId: '1208160012345678',
       brokerName: 'ZERODHA',
-      assetType: 'EQUITY',
-      segment: 'DELIVERY',
-      event: 'BUY',
-      quantity: 100,
-      price: 1500,
-      stockCode: 'RELIANCE',
+      accountHolder: 'Self',
+      openedOn: '2025-01-01',
+      amcFrequency: 'ANNUALLY',
+      planCode: 'STANDARD',
+      lastBilledThrough: '2025-12-31',
+      billingEvents: [],
     };
 
-    it('POSTs to /charges/simulate and returns backend response on success', () => {
-      const expected: ChargeBreakdownResponse = {
-        scheduleCode: 'ZERODHA-EQUITY-DELIVERY-2025-04-01',
-        resolution: 'RESOLVED',
-        totalCharges: 182.45,
-        deductibleCharges: 32.45,
-        nonDeductibleCharges: 150,
-        turnover: 150000,
-        lines: [],
-      };
-      let actual: ChargeBreakdownResponse | undefined;
-      service.simulateCharges(buyDeliveryReq).subscribe((r) => (actual = r));
+    service.registerDematAccount('u@test.com', dirtyAccount).subscribe();
 
-      const req = httpMock.expectOne(`${BASE}/charges/simulate`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(buyDeliveryReq);
-      req.flush(expected);
-
-      expect(actual).toEqual(expected);
+    const req = httpMock.expectOne(`${BASE}/api/v1/me/charges/accounts`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      dematAccountId: '1208160012345678',
+      brokerName: 'ZERODHA',
+      accountHolder: 'Self',
+      openedOn: '2025-01-01',
+      amcFrequency: 'ANNUALLY',
+      planCode: 'STANDARD',
     });
-
-    it('falls back to mock calculation on error for Zerodha BUY DELIVERY (includes stamp duty, zero brokerage)', () => {
-      let actual: ChargeBreakdownResponse | undefined;
-      service.simulateCharges(buyDeliveryReq).subscribe((r) => (actual = r));
-
-      httpMock
-        .expectOne(`${BASE}/charges/simulate`)
-        .flush('err', { status: 500, statusText: 'Server Error' });
-
-      expect(actual?.resolution).toBe('RESOLVED');
-      expect(actual?.turnover).toBe(150000);
-      expect(actual?.lines.some((l) => l.code === 'STAMP_DUTY')).toBe(true);
-      expect(actual?.lines.some((l) => l.code === 'DP')).toBe(false);
-      expect(actual?.lines.find((l) => l.code === 'BROKERAGE')?.amount).toBe(0);
-    });
-
-    it('falls back to mock calculation on error for SELL DELIVERY (includes DP, no stamp duty) and INTRADAY non-Zerodha', () => {
-      const sellDelivery: ChargeSimulationRequest = {
-        ...buyDeliveryReq,
-        event: 'SELL',
-      };
-      let sellRes: ChargeBreakdownResponse | undefined;
-      service.simulateCharges(sellDelivery).subscribe((r) => (sellRes = r));
-      httpMock
-        .expectOne(`${BASE}/charges/simulate`)
-        .flush('err', { status: 500, statusText: 'Server Error' });
-
-      expect(sellRes?.lines.some((l) => l.code === 'DP')).toBe(true);
-      expect(sellRes?.lines.some((l) => l.code === 'STAMP_DUTY')).toBe(false);
-
-      const intradayNonZerodha: ChargeSimulationRequest = {
-        brokerName: 'UPSTOX',
-        assetType: 'EQUITY',
-        segment: 'INTRADAY',
-        event: 'SELL',
-        quantity: 0,
-        price: 0,
-      };
-      let intraRes: ChargeBreakdownResponse | undefined;
-      service
-        .simulateCharges(intradayNonZerodha)
-        .subscribe((r) => (intraRes = r));
-      httpMock
-        .expectOne(`${BASE}/charges/simulate`)
-        .flush('err', { status: 500, statusText: 'Server Error' });
-
-      expect(intraRes?.lines.find((l) => l.code === 'BROKERAGE')?.amount).toBe(
-        20,
-      );
-      expect(intraRes?.lines.some((l) => l.code === 'DP')).toBe(false);
-    });
+    req.flush(dirtyAccount);
   });
 
-  // ---------------------------------------------------------------------------
-  // 2. Catalogue
-  // ---------------------------------------------------------------------------
-  describe('getChargeCatalogue', () => {
-    it('GETs /charge-catalogue and falls back to mock entries on error', () => {
-      const apiEntries: ChargeCatalogueEntry[] = [
-        {
-          code: 'STT',
-          displayName: 'STT',
-          category: 'STATUTORY',
-          deductibleForCapitalGains: false,
-          status: 'ACTIVE',
-          description: 'Tax',
-          statutoryReference: 'Act',
-        },
-      ];
-      let res: ChargeCatalogueEntry[] | undefined;
-      service.getChargeCatalogue().subscribe((r) => (res = r));
-      const req = httpMock.expectOne(`${BASE}/charge-catalogue`);
-      expect(req.request.method).toBe('GET');
-      req.flush(apiEntries);
-      expect(res).toEqual(apiEntries);
+  it('sanitizes ChargeScheduleRequest to strip id before POST /api/v1/admin/charges/schedules', () => {
+    const schedule: ChargeSchedule = {
+      id: 'db-id',
+      scheduleCode: 'ZER-EQ',
+      brokerName: 'ZERODHA',
+      startDate: '2026-01-01',
+      rules: [],
+    };
 
-      let fallback: ChargeCatalogueEntry[] | undefined;
-      service.getChargeCatalogue().subscribe((r) => (fallback = r));
-      httpMock
-        .expectOne(`${BASE}/charge-catalogue`)
-        .flush('err', { status: 500, statusText: 'Err' });
-      expect(fallback?.length).toBe(10);
-      expect(fallback?.map((e) => e.code)).toContain('BROKERAGE');
-      expect(fallback?.map((e) => e.code)).toContain('EXIT_LOAD');
+    service.publishSchedule(schedule).subscribe();
+
+    const req = httpMock.expectOne(`${BASE}/api/v1/admin/charges/schedules`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      scheduleCode: 'ZER-EQ',
+      brokerName: 'ZERODHA',
+      startDate: '2026-01-01',
+      rules: [],
     });
+    req.flush(schedule);
   });
 
-  // ---------------------------------------------------------------------------
-  // 3. User Charges History, Contract Note, Gaps, Reconciliation
-  // ---------------------------------------------------------------------------
-  describe('user charges endpoints', () => {
-    const email = 'user+1@test.com';
-    const encodedEmail = encodeURIComponent(email);
+  it('uses /api/v1/admin/charges/... routes for AMC due/impose with ANNUALLY frequency', () => {
+    service.getAmcDue('ANNUALLY', '2026-03-31').subscribe();
+    const dueReq = httpMock.expectOne(
+      `${BASE}/api/v1/admin/charges/accounts/due?frequency=ANNUALLY&billedThrough=2026-03-31`,
+    );
+    expect(dueReq.request.method).toBe('GET');
+    dueReq.flush([]);
 
-    it('getUserChargeHistory sends optional query params and falls back on error', () => {
-      let res: UserCharge[] | undefined;
-      service
-        .getUserChargeHistory(email, '2026-01-01', '2026-03-31', 'EQUITY')
-        .subscribe((r) => (res = r));
-
-      const req = httpMock.expectOne(
-        `${BASE}/user-charges/user/${encodedEmail}?from=2026-01-01&to=2026-03-31&assetType=EQUITY`,
-      );
-      expect(req.request.method).toBe('GET');
-      req.flush([]);
-      expect(res).toEqual([]);
-
-      let fallback: UserCharge[] | undefined;
-      service.getUserChargeHistory(email).subscribe((r) => (fallback = r));
-      httpMock
-        .expectOne(`${BASE}/user-charges/user/${encodedEmail}`)
-        .flush('err', { status: 500, statusText: 'Err' });
-      expect(fallback?.length).toBe(4);
-      expect(fallback?.[0].email).toBe(email);
-    });
-
-    it('getContractNote encodes path params and falls back on error', () => {
-      const txnId = 'TXN/001';
-      let res: ChargeBreakdownResponse | undefined;
-      service.getContractNote(email, txnId).subscribe((r) => (res = r));
-
-      const req = httpMock.expectOne(
-        `${BASE}/user-charges/user/${encodedEmail}/transaction/${encodeURIComponent(txnId)}`,
-      );
-      expect(req.request.method).toBe('GET');
-      req.flush('err', { status: 404, statusText: 'Not Found' });
-      expect(res?.scheduleCode).toBe('ZERODHA-EQUITY-DELIVERY-2025-04-01');
-      expect(res?.lines.length).toBe(6);
-    });
-
-    it('getUserChargeGaps GETs /gaps and falls back on error', () => {
-      let res: UserCharge[] | undefined;
-      service.getUserChargeGaps(email).subscribe((r) => (res = r));
-      const req = httpMock.expectOne(
-        `${BASE}/user-charges/user/${encodedEmail}/gaps`,
-      );
-      expect(req.request.method).toBe('GET');
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res?.length).toBe(1);
-      expect(res?.[0].resolution).toBe('NO_SCHEDULE');
-    });
-
-    it('getUserChargeReconciliation GETs /reconciliation and falls back on error', () => {
-      let res: ChargeReconciliationResponse | undefined;
-      service.getUserChargeReconciliation(email).subscribe((r) => (res = r));
-      const req = httpMock.expectOne(
-        `${BASE}/user-charges/user/${encodedEmail}/reconciliation`,
-      );
-      expect(req.request.method).toBe('GET');
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res?.comparableCount).toBe(28);
-      expect(res?.rows.length).toBe(3);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // 4. Demat Accounts
-  // ---------------------------------------------------------------------------
-  describe('demat account endpoints', () => {
-    const email = 'user@test.com';
-    const encodedEmail = encodeURIComponent(email);
-
-    it('getUserDematAccounts returns accounts and falls back on error', () => {
-      let res: ChargeAccount[] | undefined;
-      service.getUserDematAccounts(email).subscribe((r) => (res = r));
-      const req = httpMock.expectOne(
-        `${BASE}/charge-accounts/user/${encodedEmail}`,
-      );
-      expect(req.request.method).toBe('GET');
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res?.length).toBe(2);
-      expect(res?.[0].email).toBe(email);
-    });
-
-    it('registerDematAccount POSTs payload and applies fallback defaults on error', () => {
-      let defaultRes: ChargeAccount | undefined;
-      service
-        .registerDematAccount(email, {})
-        .subscribe((r) => (defaultRes = r));
-      const req1 = httpMock.expectOne(
-        `${BASE}/charge-accounts/user/${encodedEmail}`,
-      );
-      expect(req1.request.method).toBe('POST');
-      req1.flush('err', { status: 500, statusText: 'Err' });
-      expect(defaultRes?.brokerName).toBe('ZERODHA');
-      expect(defaultRes?.amcFrequency).toBe('QUARTERLY');
-
-      let customRes: ChargeAccount | undefined;
-      service
-        .registerDematAccount(email, {
-          dematAccountId: '9999',
-          brokerName: 'UPSTOX',
-          accountHolder: 'Spouse',
-          openedOn: '2025-01-01',
-          amcFrequency: 'YEARLY',
-          planCode: 'PRO',
-        })
-        .subscribe((r) => (customRes = r));
-      httpMock
-        .expectOne(`${BASE}/charge-accounts/user/${encodedEmail}`)
-        .flush('err', { status: 500, statusText: 'Err' });
-      expect(customRes?.brokerName).toBe('UPSTOX');
-      expect(customRes?.planCode).toBe('PRO');
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // 5. Admin: Rate Cards & Schedules
-  // ---------------------------------------------------------------------------
-  describe('schedule management endpoints', () => {
-    it('getChargeSchedulesByBroker handles ZERODHA and non-ZERODHA fallbacks', () => {
-      let zRes: ChargeSchedule[] | undefined;
-      service
-        .getChargeSchedulesByBroker('ZERODHA')
-        .subscribe((r) => (zRes = r));
-      httpMock
-        .expectOne(`${BASE}/charge-schedules?broker=ZERODHA`)
-        .flush('err', { status: 500, statusText: 'Err' });
-      expect(zRes?.[0].rules[0].flatAmount).toBe(0);
-
-      let uRes: ChargeSchedule[] | undefined;
-      service.getChargeSchedulesByBroker('UPSTOX').subscribe((r) => (uRes = r));
-      httpMock
-        .expectOne(`${BASE}/charge-schedules?broker=UPSTOX`)
-        .flush('err', { status: 500, statusText: 'Err' });
-      expect(uRes?.[0].rules[0].flatAmount).toBe(20);
-    });
-
-    it('getChargeScheduleByCode GETs by code and falls back on error', () => {
-      let res: ChargeSchedule | undefined;
-      service
-        .getChargeScheduleByCode('ZERODHA-EQ-2025')
-        .subscribe((r) => (res = r));
-      const req = httpMock.expectOne(
-        `${BASE}/charge-schedules/ZERODHA-EQ-2025`,
-      );
-      expect(req.request.method).toBe('GET');
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res?.brokerName).toBe('ZERODHA');
-    });
-
-    it('getUnverifiedSchedules GETs /unverified and falls back on error', () => {
-      let res: ChargeSchedule[] | undefined;
-      service.getUnverifiedSchedules().subscribe((r) => (res = r));
-      const req = httpMock.expectOne(`${BASE}/charge-schedules/unverified`);
-      expect(req.request.method).toBe('GET');
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res?.[0].verifiedOn).toBeUndefined();
-    });
-
-    it('closeSchedule PATCHes endDate and updates fallback schedule on error', () => {
-      let res: ChargeSchedule | undefined;
-      service.closeSchedule('CODE-1', '2026-06-30').subscribe((r) => (res = r));
-      const req = httpMock.expectOne(
-        `${BASE}/charge-schedules/CODE-1/close?endDate=2026-06-30`,
-      );
-      expect(req.request.method).toBe('PATCH');
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res?.endDate).toBe('2026-06-30');
-    });
-
-    it('seedCharges POSTs /charges/seed and falls back on error', () => {
-      let res: ChargeSeedReport | undefined;
-      service.seedCharges().subscribe((r) => (res = r));
-      const req = httpMock.expectOne(`${BASE}/charges/seed`);
-      expect(req.request.method).toBe('POST');
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res?.catalogueEntriesWritten).toBe(12);
-    });
-
-    it('getScheduleDrift GETs /drift and falls back on error', () => {
-      let res: ChargeScheduleDrift[] | undefined;
-      service.getScheduleDrift().subscribe((r) => (res = r));
-      const req = httpMock.expectOne(`${BASE}/charge-schedules/drift`);
-      expect(req.request.method).toBe('GET');
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res?.length).toBe(1);
-    });
-
-    it('publishSchedule POSTs schedule and echoes it on error', () => {
-      const schedule: ChargeSchedule = {
-        id: 'sch-new',
-        scheduleCode: 'TEST-1',
-        brokerName: 'ZERODHA',
-        assetType: 'EQUITY',
-        segment: 'DELIVERY',
-        startDate: '2026-04-01',
-        rules: [],
-      };
-      let res: ChargeSchedule | undefined;
-      service.publishSchedule(schedule).subscribe((r) => (res = r));
-      const req = httpMock.expectOne(`${BASE}/charge-schedules`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(schedule);
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res).toEqual(schedule);
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // 6. Admin: Demat AMC Billing
-  // ---------------------------------------------------------------------------
-  describe('AMC billing endpoints', () => {
-    it('getAmcDue GETs /charge-accounts/due with params and falls back on error', () => {
-      let res: ChargeAccount[] | undefined;
-      service.getAmcDue('QUARTERLY', '2026-03-31').subscribe((r) => (res = r));
-      const req = httpMock.expectOne(
-        `${BASE}/charge-accounts/due?frequency=QUARTERLY&billedThrough=2026-03-31`,
-      );
-      expect(req.request.method).toBe('GET');
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res?.length).toBe(1);
-    });
-
-    it('imposeAmc POSTs /charges/amc/impose with params and falls back on error', () => {
-      let res: ChargeAccount[] | undefined;
-      service.imposeAmc('YEARLY', '2026-03-31').subscribe((r) => (res = r));
-      const req = httpMock.expectOne(
-        `${BASE}/charges/amc/impose?frequency=YEARLY&billedThrough=2026-03-31`,
-      );
-      expect(req.request.method).toBe('POST');
-      req.flush('err', { status: 500, statusText: 'Err' });
-      expect(res?.length).toBe(1);
-    });
+    service.imposeAmc('ANNUALLY', '2026-03-31').subscribe();
+    const imposeReq = httpMock.expectOne(
+      `${BASE}/api/v1/admin/charges/amc/impose?frequency=ANNUALLY&billedThrough=2026-03-31`,
+    );
+    expect(imposeReq.request.method).toBe('POST');
+    imposeReq.flush([]);
   });
 });

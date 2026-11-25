@@ -9,6 +9,11 @@ import { BadgeComponent } from '@shared/ui/badge/badge.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { AuthService } from '@core/services/auth.service';
 import { BrokerChargesService } from '@features/broker-charges/services/broker-charges.service';
+import { extractErrorMessage } from '@core/utils/http-error.util';
+import {
+  summarizeChargeBreakdown,
+  summarizeLedgerDeductibility,
+} from '../../utils/charge-deductibility.util';
 import {
   AssetType,
   TradeSegment,
@@ -73,11 +78,30 @@ export class BrokerChargesComponent implements OnInit {
   simExchange = signal<ExchangeName>('NSE');
   simEvent = signal<ChargeEvent>('BUY');
   simStockCode = signal<string>('RELIANCE');
+  simTransactionDate = signal<string>(new Date().toISOString().split('T')[0]);
   simQuantity = signal<number>(100);
   simPrice = signal<number>(1500.0);
   simHoldingDays = signal<number>(180);
   isSimulating = signal<boolean>(false);
   simulationResult = signal<ChargeBreakdownResponse | null>(null);
+
+  simDeductibility = computed(() =>
+    summarizeChargeBreakdown(
+      this.simulationResult()?.lines,
+      this.catalogueEntries(),
+      {
+        quantity: Number(this.simQuantity()) || 0,
+        price: Number(this.simPrice()) || 0,
+      },
+    ),
+  );
+
+  contractNoteDeductibility = computed(() =>
+    summarizeChargeBreakdown(
+      this.selectedContractNote()?.lines,
+      this.catalogueEntries(),
+    ),
+  );
 
   simGrossTurnover = computed(() => {
     return (this.simQuantity() || 0) * (this.simPrice() || 0);
@@ -116,22 +140,15 @@ export class BrokerChargesComponent implements OnInit {
     );
   });
 
-  ledgerDeductibleFees = computed(() => {
-    return this.ledgerCharges().reduce((sum, item) => {
-      const ded =
-        (item.amountByCode['BROKERAGE'] || 0) +
-        (item.amountByCode['EXCHANGE_TXN'] || 0) +
-        (item.amountByCode['SEBI_FEE'] || 0) +
-        (item.amountByCode['IPFT'] || 0) +
-        (item.amountByCode['DP'] || 0) +
-        (item.amountByCode['GST'] || 0);
-      return sum + ded;
-    }, 0);
-  });
+  ledgerDeductibility = computed(() =>
+    summarizeLedgerDeductibility(this.ledgerCharges(), this.catalogueEntries()),
+  );
 
-  ledgerNonDeductibleFees = computed(() => {
-    return Math.max(0, this.ledgerTotalFees() - this.ledgerDeductibleFees());
-  });
+  ledgerDeductibleFees = computed(() => this.ledgerDeductibility().deductible);
+
+  ledgerNonDeductibleFees = computed(
+    () => this.ledgerDeductibility().nonDeductible,
+  );
 
   // ==========================================
   // 3. DEMAT ACCOUNTS STATE
@@ -219,6 +236,20 @@ export class BrokerChargesComponent implements OnInit {
 
   // --- 1. SIMULATOR METHODS ---
   runSimulation(): void {
+    const trimmedCode = this.simStockCode().trim();
+    if (
+      (this.simEvent() === 'BUY' || this.simEvent() === 'SELL') &&
+      !trimmedCode
+    ) {
+      this.showToast(
+        'Please enter a stock symbol for BUY/SELL simulation.',
+        'warning',
+      );
+      return;
+    }
+
+    const txDate =
+      this.simTransactionDate() || new Date().toISOString().split('T')[0];
     this.isSimulating.set(true);
     const req: ChargeSimulationRequest = {
       brokerName: this.simBroker(),
@@ -226,15 +257,16 @@ export class BrokerChargesComponent implements OnInit {
       segment: this.simSegment(),
       exchange: this.simExchange(),
       event: this.simEvent(),
-      stockCode: this.simStockCode(),
-      quantity: Number(this.simQuantity()) || 1,
-      price: Number(this.simPrice()) || 0,
+      stockCode: trimmedCode || undefined,
+      quantity: Math.max(1, Number(this.simQuantity()) || 1),
+      price: Math.max(0, Number(this.simPrice()) || 0),
+      transactionDate: txDate,
       lots:
         this.simAssetType() === 'MUTUAL_FUND'
           ? [
               {
-                quantity: Number(this.simQuantity()) || 1,
-                price: Number(this.simPrice()) || 0,
+                quantity: Math.max(1, Number(this.simQuantity()) || 1),
+                price: Math.max(0, Number(this.simPrice()) || 0),
                 date: new Date(Date.now() - this.simHoldingDays() * 86400000)
                   .toISOString()
                   .split('T')[0],
@@ -248,7 +280,16 @@ export class BrokerChargesComponent implements OnInit {
         this.simulationResult.set(res);
         this.isSimulating.set(false);
       },
-      error: () => this.isSimulating.set(false),
+      error: (err) => {
+        this.isSimulating.set(false);
+        this.showToast(
+          extractErrorMessage(
+            err,
+            'Could not simulate charges. Please check inputs.',
+          ),
+          'warning',
+        );
+      },
     });
   }
 
@@ -271,11 +312,18 @@ export class BrokerChargesComponent implements OnInit {
           this.ledgerCharges.set(data);
           this.ledgerLoading.set(false);
         },
-        error: () => this.ledgerLoading.set(false),
+        error: (err) => {
+          this.ledgerLoading.set(false);
+          this.showToast(
+            extractErrorMessage(err, 'Could not load charges ledger.'),
+            'warning',
+          );
+        },
       });
 
     this.chargesService.getUserChargeGaps(email).subscribe({
       next: (gaps) => this.ledgerGaps.set(gaps),
+      error: () => this.ledgerGaps.set([]),
     });
   }
 
@@ -287,6 +335,11 @@ export class BrokerChargesComponent implements OnInit {
         this.selectedContractNote.set(note);
         this.isContractNoteModalOpen.set(true);
       },
+      error: (err) =>
+        this.showToast(
+          extractErrorMessage(err, 'Could not load contract note.'),
+          'warning',
+        ),
     });
   }
 
@@ -304,7 +357,13 @@ export class BrokerChargesComponent implements OnInit {
         this.dematAccounts.set(accounts);
         this.dematLoading.set(false);
       },
-      error: () => this.dematLoading.set(false),
+      error: (err) => {
+        this.dematLoading.set(false);
+        this.showToast(
+          extractErrorMessage(err, 'Could not load linked demat accounts.'),
+          'warning',
+        );
+      },
     });
   }
 
@@ -341,6 +400,11 @@ export class BrokerChargesComponent implements OnInit {
         );
         this.newDematId.set('');
       },
+      error: (err) =>
+        this.showToast(
+          extractErrorMessage(err, 'Could not save demat account.'),
+          'warning',
+        ),
     });
   }
 
@@ -376,7 +440,13 @@ export class BrokerChargesComponent implements OnInit {
         );
         this.loadRateCards();
       },
-      error: () => this.isSeeding.set(false),
+      error: (err) => {
+        this.isSeeding.set(false);
+        this.showToast(
+          extractErrorMessage(err, 'Could not seed pricing schedules.'),
+          'warning',
+        );
+      },
     });
   }
 
@@ -400,6 +470,11 @@ export class BrokerChargesComponent implements OnInit {
         );
         this.loadRateCards();
       },
+      error: (err) =>
+        this.showToast(
+          extractErrorMessage(err, `Could not retire schedule ${code}.`),
+          'warning',
+        ),
     });
   }
 
@@ -417,7 +492,13 @@ export class BrokerChargesComponent implements OnInit {
             'info',
           );
         },
-        error: () => this.amcPreviewLoading.set(false),
+        error: (err) => {
+          this.amcPreviewLoading.set(false);
+          this.showToast(
+            extractErrorMessage(err, 'Could not preview due AMC accounts.'),
+            'warning',
+          );
+        },
       });
   }
 
@@ -435,7 +516,13 @@ export class BrokerChargesComponent implements OnInit {
           );
           this.amcDueAccounts.set([]);
         },
-        error: () => this.isImposingAmc.set(false),
+        error: (err) => {
+          this.isImposingAmc.set(false);
+          this.showToast(
+            extractErrorMessage(err, 'Could not impose AMC billing.'),
+            'warning',
+          );
+        },
       });
   }
 
@@ -448,7 +535,13 @@ export class BrokerChargesComponent implements OnInit {
         this.reconciliationData.set(res);
         this.reconLoading.set(false);
       },
-      error: () => this.reconLoading.set(false),
+      error: (err) => {
+        this.reconLoading.set(false);
+        this.showToast(
+          extractErrorMessage(err, 'Could not load reconciliation audit.'),
+          'warning',
+        );
+      },
     });
   }
 }
