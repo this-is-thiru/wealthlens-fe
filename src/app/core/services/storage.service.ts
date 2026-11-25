@@ -32,6 +32,22 @@ export class StorageService {
     }
   }
 
+  getSessionItem(key: string): string | null {
+    return this.isBrowser() ? sessionStorage.getItem(key) : null;
+  }
+
+  setSessionItem(key: string, value: string): void {
+    if (this.isBrowser()) {
+      sessionStorage.setItem(key, value);
+    }
+  }
+
+  removeSessionItem(key: string): void {
+    if (this.isBrowser()) {
+      sessionStorage.removeItem(key);
+    }
+  }
+
   isTokenValid(token: string): boolean {
     if (!token) return false;
 
@@ -88,14 +104,15 @@ export class StorageService {
       if (!payload) return [];
 
       const decoded = JSON.parse(atob(payload));
-      const rawAuthorities = decoded.authorities || decoded.roles || decoded.role;
+      const rawAuthorities =
+        decoded.authorities || decoded.roles || decoded.role;
 
       if (!rawAuthorities) return [];
 
       let list: string[] = [];
       if (Array.isArray(rawAuthorities)) {
         list = rawAuthorities.map((item: any) =>
-          typeof item === 'string' ? item : item?.authority || ''
+          typeof item === 'string' ? item : item?.authority || '',
         );
       } else if (typeof rawAuthorities === 'string') {
         list = rawAuthorities.split(',').map((s: string) => s.trim());
