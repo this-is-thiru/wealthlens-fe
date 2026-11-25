@@ -116,7 +116,7 @@ function handleSessionExpired(
     'warning',
     null,
   );
-  router.navigate(
+  void router.navigate(
     [{ outlets: { primary: ['home'], modal: [AuthModalRoute.SIGN_IN] } }],
     {
       queryParams: { returnUrl: currentUrl },

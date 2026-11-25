@@ -172,7 +172,7 @@ export class SignUpComponent implements OnInit {
             'Account created successfully! You can now sign in.',
             'success',
           );
-          this.router.navigate(
+          void this.router.navigate(
             [{ outlets: { modal: [AuthModalRoute.SIGN_IN] } }],
             {
               queryParamsHandling: 'preserve',
@@ -213,6 +213,6 @@ export class SignUpComponent implements OnInit {
   }
 
   onClose(): void {
-    this.router.navigate([{ outlets: { modal: null } }]);
+    void this.router.navigate([{ outlets: { modal: null } }]);
   }
 }

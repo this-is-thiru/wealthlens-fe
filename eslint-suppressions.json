@@ -109,11 +109,6 @@
       "count": 1
     }
   },
-  "src/app/features/broker-charges/pages/broker-charges/broker-charges.component.html": {
-    "@angular-eslint/template/label-has-associated-control": {
-      "count": 15
-    }
-  },
   "src/app/features/home/components/hero-scene/hero-scene.component.ts": {
     "@angular-eslint/no-output-native": {
       "count": 1

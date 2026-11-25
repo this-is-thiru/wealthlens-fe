@@ -209,14 +209,14 @@ export class AuthService {
 
     if (redirect) {
       if (returnUrl) {
-        this.router.navigate(
+        void this.router.navigate(
           [{ outlets: { primary: ['home'], modal: [AuthModalRoute.SIGN_IN] } }],
           {
             queryParams: { returnUrl },
           },
         );
       } else {
-        this.router.navigate(['/home']);
+        void this.router.navigate(['/home']);
       }
     }
   }
@@ -240,7 +240,7 @@ export class AuthService {
     this.userRoles.set([UserRole.USER]);
     this.startAutoLogout(token);
     this.isLoggedIn.set(true);
-    this.router.navigate(['/portfolio-analytics']);
+    void this.router.navigate(['/portfolio-analytics']);
   }
 
   isUserAuthenticated(): boolean {

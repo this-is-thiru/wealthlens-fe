@@ -269,11 +269,11 @@
 
                 <!-- Buy / Sell Action -->
                 <div>
-                  <label
+                  <span
                     class="block text-2xs font-semibold text-text-secondary uppercase mb-1.5"
                   >
                     Trade Action
-                  </label>
+                  </span>
                   <div class="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -306,11 +306,13 @@
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label
+                      for="sim-broker"
                       class="block text-2xs font-semibold text-text-secondary uppercase mb-1"
                     >
                       Broker
                     </label>
                     <select
+                      id="sim-broker"
                       [(ngModel)]="simBroker"
                       (change)="runSimulation()"
                       class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent"
@@ -322,11 +324,13 @@
                   </div>
                   <div>
                     <label
+                      for="sim-asset-type"
                       class="block text-2xs font-semibold text-text-secondary uppercase mb-1"
                     >
                       Asset Class
                     </label>
                     <select
+                      id="sim-asset-type"
                       [(ngModel)]="simAssetType"
                       (change)="runSimulation()"
                       class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent"
@@ -341,11 +345,13 @@
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label
+                      for="sim-segment"
                       class="block text-2xs font-semibold text-text-secondary uppercase mb-1"
                     >
                       Segment
                     </label>
                     <select
+                      id="sim-segment"
                       [(ngModel)]="simSegment"
                       (change)="runSimulation()"
                       class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent"
@@ -356,11 +362,13 @@
                   </div>
                   <div>
                     <label
+                      for="sim-exchange"
                       class="block text-2xs font-semibold text-text-secondary uppercase mb-1"
                     >
                       Exchange
                     </label>
                     <select
+                      id="sim-exchange"
                       [(ngModel)]="simExchange"
                       (change)="runSimulation()"
                       class="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent"
@@ -410,11 +418,13 @@
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label
+                      for="sim-quantity"
                       class="block text-2xs font-semibold text-text-secondary uppercase mb-1"
                     >
                       Quantity
                     </label>
                     <input
+                      id="sim-quantity"
                       type="number"
                       min="1"
                       [(ngModel)]="simQuantity"
@@ -424,11 +434,13 @@
                   </div>
                   <div>
                     <label
+                      for="sim-price"
                       class="block text-2xs font-semibold text-text-secondary uppercase mb-1"
                     >
                       Price / Share (₹)
                     </label>
                     <input
+                      id="sim-price"
                       type="number"
                       min="0.01"
                       step="0.05"
@@ -447,11 +459,13 @@
                     class="p-3 bg-purple-950/20 border border-purple-500/20 rounded-lg"
                   >
                     <label
+                      for="sim-holding-days"
                       class="block text-2xs font-semibold text-purple-300 uppercase mb-1"
                     >
                       Holding Days (Exit Load)
                     </label>
                     <input
+                      id="sim-holding-days"
                       type="number"
                       [(ngModel)]="simHoldingDays"
                       (input)="runSimulation()"
@@ -732,14 +746,19 @@
               </div>
 
               <div class="flex items-center gap-2">
+                <label for="ledger-from-date" class="sr-only">From date</label>
                 <input
+                  id="ledger-from-date"
                   type="date"
                   [(ngModel)]="filterFromDate"
                   (change)="loadLedger()"
                   class="bg-surface border border-border rounded px-2 py-1 text-xs text-white"
                 />
-                <span class="text-xs text-text-muted">to</span>
+                <label for="ledger-to-date" class="text-xs text-text-muted">
+                  to
+                </label>
                 <input
+                  id="ledger-to-date"
                   type="date"
                   [(ngModel)]="filterToDate"
                   (change)="loadLedger()"
@@ -1251,11 +1270,13 @@
             >
               <div>
                 <label
+                  for="amc-frequency"
                   class="block text-2xs font-semibold text-text-secondary uppercase mb-1"
                 >
                   Billing Frequency
                 </label>
                 <select
+                  id="amc-frequency"
                   [(ngModel)]="amcFrequency"
                   class="w-full bg-surface border border-border rounded px-2.5 py-1.5 text-xs text-white"
                 >
@@ -1266,11 +1287,13 @@
 
               <div>
                 <label
+                  for="amc-billed-through"
                   class="block text-2xs font-semibold text-text-secondary uppercase mb-1"
                 >
                   Target Billing Date
                 </label>
                 <input
+                  id="amc-billed-through"
                   type="date"
                   [(ngModel)]="amcBilledThrough"
                   class="w-full bg-surface border border-border rounded px-2.5 py-1.5 text-xs text-white"
@@ -1357,8 +1380,11 @@
               class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-surface-alt rounded-lg border border-border"
             >
               <div class="flex items-center gap-2 flex-1">
-                <span class="text-xs text-text-muted">Target User:</span>
+                <label for="recon-email" class="text-xs text-text-muted">
+                  Target User:
+                </label>
                 <input
+                  id="recon-email"
                   type="email"
                   [(ngModel)]="reconEmail"
                   placeholder="user@domain.com"
@@ -1600,10 +1626,11 @@
 
         <div class="space-y-3 text-xs">
           <div>
-            <label class="block text-text-secondary mb-1">
+            <label for="new-demat-id" class="block text-text-secondary mb-1">
               Demat Account ID (16-Digit BOID)
             </label>
             <input
+              id="new-demat-id"
               type="text"
               [(ngModel)]="newDematId"
               placeholder="1208160012345678"
@@ -1611,8 +1638,14 @@
             />
           </div>
           <div>
-            <label class="block text-text-secondary mb-1">Broker</label>
+            <label
+              for="new-demat-broker"
+              class="block text-text-secondary mb-1"
+            >
+              Broker
+            </label>
             <select
+              id="new-demat-broker"
               [(ngModel)]="newDematBroker"
               class="w-full bg-surface border border-border rounded px-3 py-2 text-white"
             >
@@ -1622,10 +1655,14 @@
             </select>
           </div>
           <div>
-            <label class="block text-text-secondary mb-1">
+            <label
+              for="new-demat-holder"
+              class="block text-text-secondary mb-1"
+            >
               Account Holder Name
             </label>
             <input
+              id="new-demat-holder"
               type="text"
               [(ngModel)]="newDematHolder"
               placeholder="e.g. Self or Spouse"
@@ -1634,18 +1671,28 @@
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-text-secondary mb-1">Opening Date</label>
+              <label
+                for="new-demat-opened-on"
+                class="block text-text-secondary mb-1"
+              >
+                Opening Date
+              </label>
               <input
+                id="new-demat-opened-on"
                 type="date"
                 [(ngModel)]="newDematOpenedOn"
                 class="w-full bg-surface border border-border rounded px-3 py-2 text-white font-mono"
               />
             </div>
             <div>
-              <label class="block text-text-secondary mb-1">
+              <label
+                for="new-demat-frequency"
+                class="block text-text-secondary mb-1"
+              >
                 AMC Frequency
               </label>
               <select
+                id="new-demat-frequency"
                 [(ngModel)]="newDematFrequency"
                 class="w-full bg-surface border border-border rounded px-3 py-2 text-white"
               >
